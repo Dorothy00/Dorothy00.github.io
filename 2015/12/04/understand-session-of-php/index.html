@@ -18,8 +18,8 @@
 <meta property="og:url" content="http://yoursite.com/2015/12/04/understand-session-of-php/index.html">
 <meta property="og:site_name" content="DOROTHY">
 <meta property="og:description" content="1.session理解最近在用thinkphp做B2B网站开发，首先当然是要考虑用户登录问题。web登录过程中，我们一般使用session机制来维持客户端与服务器的会话状态。下面我主要谈一谈自己对于session的理解，以及由于thinkphp的一个bug而引发的对session存储于数据库的思考。">
-<meta property="og:image" content="http://yoursite.com/session示意图small2.png">
-<meta property="og:updated_time" content="2015-12-05T12:06:26.000Z">
+<meta property="og:image" content="http://7xoxkx.com1.z0.glb.clouddn.com/session示意图small.png">
+<meta property="og:updated_time" content="2015-12-05T12:10:06.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="PHP之session理解">
 <meta name="twitter:description" content="1.session理解最近在用thinkphp做B2B网站开发，首先当然是要考虑用户登录问题。web登录过程中，我们一般使用session机制来维持客户端与服务器的会话状态。下面我主要谈一谈自己对于session的理解，以及由于thinkphp的一个bug而引发的对session存储于数据库的思考。">
@@ -74,7 +74,7 @@
   <div class="entry">
     
       <h2 id="1-session理解">1.session理解</h2><p>最近在用thinkphp做B2B网站开发，首先当然是要考虑用户登录问题。web登录过程中，我们一般使用session机制来维持客户端与服务器的会话状态。下面我主要谈一谈自己对于session的理解，以及由于thinkphp的一个bug而引发的对session存储于数据库的思考。<br><a id="more"></a><br>当用户第一次访问网站时，服务器会为用户生成一个session。你可以把生成的session理解为一段字符串。服务器一方面会把这段session字符串存储于服务器上，另一方面会将这段字符串发送给用户。用户收到这段字符串后，每次发起请求时都会将这段字符串带上。服务器收到这个session字符串后与自己存储的做对比，就可以识别用户身份了。(可以用下图表示)</p>
-<p><img src="session示意图small2.png" alt=""></p>
+<p><img src="http://7xoxkx.com1.z0.glb.clouddn.com/session示意图small.png" alt=""></p>
 <p>那么session又是如何过期的呢？通常我们都会在session字符串里添加一个expire字段，他的值表示session过期时间。服务器每次从请求来的session字段中解析出expire并与当前时间对比，如果小于当前时间表示session过期，需要用户重新认证身份信息，否则session合法。</p>
 <p>session的基本原理说完了，下面我们来谈谈cookie。经常听人说使用session/cookie机制来维持http会话状态。那什么是cookie呢？如果把session理解为存储在服务器端的字符串，那么cookie就是存储在客户端的字符串。服务器发送给客户端的字符串就是存储在客户端的cookie中。说白了，cookie也就是一段字符串。只不过是保存特定数据的字符串。</p>
 <h2 id="2-php中session参数解释">2.php中session参数解释</h2><p>php中影响session机制的参数主要在php.ini配置文件中。主要有如下几个参数：</p>
