@@ -4,21 +4,29 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="chrome=1">
   
-  <title>DOROTHY</title>
+  <title>PHP之session理解 | DOROTHY</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   
     <meta name="author" content="Dorothy Zhang">
   
   
-  <meta name="description">
-<meta property="og:type" content="website">
-<meta property="og:title" content="DOROTHY">
-<meta property="og:url" content="http://yoursite.com/index.html">
+    <meta name="description" content="1.session理解最近在用thinkphp做B2B网站开发，首先当然是要考虑用户登录问题。web登录过程中，我们一般使用session机制来维持客户端与服务器的会话状态。下面我主要谈一谈自己对于session的理解，以及由于thinkphp的一个bug而引发的对session存储于数据库的思考。
+当用户第一次访问网站时，服务器会为用户生成一个session。你可以把生成的session理解为一">
+  
+  <meta name="description" content="1.session理解最近在用thinkphp做B2B网站开发，首先当然是要考虑用户登录问题。web登录过程中，我们一般使用session机制来维持客户端与服务器的会话状态。下面我主要谈一谈自己对于session的理解，以及由于thinkphp的一个bug而引发的对session存储于数据库的思考。
+当用户第一次访问网站时，服务器会为用户生成一个session。你可以把生成的session理解为一">
+<meta property="og:type" content="article">
+<meta property="og:title" content="PHP之session理解">
+<meta property="og:url" content="http://yoursite.com/2015/12/04/understand-session-of-php/index.html">
 <meta property="og:site_name" content="DOROTHY">
-<meta property="og:description">
+<meta property="og:description" content="1.session理解最近在用thinkphp做B2B网站开发，首先当然是要考虑用户登录问题。web登录过程中，我们一般使用session机制来维持客户端与服务器的会话状态。下面我主要谈一谈自己对于session的理解，以及由于thinkphp的一个bug而引发的对session存储于数据库的思考。
+当用户第一次访问网站时，服务器会为用户生成一个session。你可以把生成的session理解为一">
+<meta property="og:image" content="http://yoursite.com/session示意图small2.png">
+<meta property="og:updated_time" content="2015-12-05T11:57:43.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="DOROTHY">
-<meta name="twitter:description">
+<meta name="twitter:title" content="PHP之session理解">
+<meta name="twitter:description" content="1.session理解最近在用thinkphp做B2B网站开发，首先当然是要考虑用户登录问题。web登录过程中，我们一般使用session机制来维持客户端与服务器的会话状态。下面我主要谈一谈自己对于session的理解，以及由于thinkphp的一个bug而引发的对session存储于数据库的思考。
+当用户第一次访问网站时，服务器会为用户生成一个session。你可以把生成的session理解为一">
   
   
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -50,55 +58,7 @@
   </nav>
   <div class="clearfix"></div>
 </header>
-    <div class="content">
-
-
-
-
-  
-    <article class="post">
-  <header>
-    
-      <div class="icon"></div>
-      <a href="/2015/12/05/hello-world/">
-  <time datetime="2015-12-05T09:00:35.000Z">
-    2015-12-05
-  </time>
-</a>
-    
-    
-  
-    <h1 class="title"><a href="/2015/12/05/hello-world/">Hello World</a></h1>
-  
-
-  </header>
-  
-  <div class="entry">
-    
-      <p>Welcome to <a href="http://hexo.io/" target="_blank" rel="external">Hexo</a>! This is your very first post. Check <a href="http://hexo.io/docs/" target="_blank" rel="external">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="http://hexo.io/docs/troubleshooting.html" target="_blank" rel="external">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="external">GitHub</a>.</p>
-<h2 id="Quick_Start">Quick Start</h2><h3 id="Create_a_new_post">Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">"My New Post"</span></span><br></pre></td></tr></table></figure>
-<p>More info: <a href="http://hexo.io/docs/writing.html" target="_blank" rel="external">Writing</a></p>
-<h3 id="Run_server">Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-<p>More info: <a href="http://hexo.io/docs/server.html" target="_blank" rel="external">Server</a></p>
-<h3 id="Generate_static_files">Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-<p>More info: <a href="http://hexo.io/docs/generating.html" target="_blank" rel="external">Generating</a></p>
-<h3 id="Deploy_to_remote_sites">Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-<p>More info: <a href="http://hexo.io/docs/deployment.html" target="_blank" rel="external">Deployment</a></p>
-
-    
-  </div>
-  <footer class="end-sep">
-    
-      
-      
-    
-    <div class="clearfix"></div>
-  </footer>
-</article>
-
-
-  
-    <article class="post">
+    <div class="content"><article class="post">
   <header>
     
       <div class="icon"></div>
@@ -110,7 +70,7 @@
     
     
   
-    <h1 class="title"><a href="/2015/12/04/understand-session-of-php/">PHP之session理解</a></h1>
+    <h1 class="title">PHP之session理解</h1>
   
 
   </header>
@@ -137,23 +97,22 @@
 <h2 id="4-_session安全问题">4. session安全问题</h2>
     
   </div>
-  <footer class="end-sep">
+  <footer>
     
       
+  <div class="categories">
+    <a class="categories-link" href="/categories/技术/">技术</a>
+  </div>
+
       
+  <div class="tags">
+    <a class="tags-link" href="/tags/PHP/">PHP</a>
+  </div>
+
     
     <div class="clearfix"></div>
   </footer>
 </article>
-
-
-  
-
-  <nav id="pagination">
-  
-  
-  <div class="clearfix"></div>
-</nav>
 
 </div>
   </div>
