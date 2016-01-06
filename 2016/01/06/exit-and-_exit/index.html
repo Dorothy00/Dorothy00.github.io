@@ -64,7 +64,7 @@ int main()
     {   
         err_sys(&quot;">
 <meta property="og:image" content="http://7xoxkx.com1.z0.glb.clouddn.com/standard-io-and-file-io.png">
-<meta property="og:updated_time" content="2016-01-06T08:54:56.000Z">
+<meta property="og:updated_time" content="2016-01-06T08:56:39.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="APUE读书笔记之exit()与_exit()对I/O缓冲的影响">
 <meta name="twitter:description" content="首先我们来看下书上的程序清单8-2
@@ -158,7 +158,8 @@ int main()
     <span class="built_in">printf</span>(<span class="string">"pid = %d, glob = %d, var = %d\n"</span>, getpid(), glob, var);
     <span class="built_in">exit</span>(<span class="number">0</span>);
 }
-</code></pre><p>运行结果：</p>
+</code></pre><a id="more"></a>
+<p>运行结果：</p>
 <pre><code>$./<span class="tag">a</span><span class="class">.out</span> 
 before vfork
 pid = <span class="number">29039</span>, glob = <span class="number">7</span>, <span class="tag">var</span> = <span class="number">89</span>

@@ -100,72 +100,15 @@
     <span class="built_in">printf</span>(<span class="string">"pid = %d, glob = %d, var = %d\n"</span>, getpid(), glob, var);
     <span class="built_in">exit</span>(<span class="number">0</span>);
 }
-</code></pre><p>运行结果：</p>
-<pre><code>$./<span class="tag">a</span><span class="class">.out</span> 
-before vfork
-pid = <span class="number">29039</span>, glob = <span class="number">7</span>, <span class="tag">var</span> = <span class="number">89</span>
-</code></pre><p>说明：</p>
-<ol>
-<li><p>程序通过<code>vfork()</code>创建子进程，然后在子进程中分别将全局和局部变量加1，最后通过<code>_exit(0)</code>退出子进程。 </p>
-</li>
-<li><p>通过<code>vfork()</code>创建的子进程不会拷贝父进程的数据空间、堆和栈的副本，而是与父进程共享这些数据。所以我们会看到在子进程中将变量加1，父进程中的变量也加1了(实际上是父子进程共享同一数据变量)。</p>
-</li>
-<li>_exit()函数结束一个进程时不会执行关闭标准I/O流的操作，所以父进程通过<code>printf</code>还能将数据打印出来。</li>
-</ol>
-<p>那么如果将子进程的中的<code>_exit(0)</code>换成<code>exit()</code>打印结果会如何呢？<br>我们先看打印结果：</p>
-<pre><code>$./<span class="tag">a</span><span class="class">.out</span> 
-before vfork
-pid = <span class="number">29039</span>, glob = <span class="number">7</span>, <span class="tag">var</span> = <span class="number">89</span>
-</code></pre><p>没错。。结果与使用_exit(0)相同，这是为什么呢？</p>
-<ol>
-<li><p>exit()函数在结束进程时会冲洗所有标准I/O流，而不关闭标准I/O流。</p>
-</li>
-<li><p>vfork()创建一个子进程时总是子进程执行完再执行父进程。</p>
-</li>
-<li><p>在调用<code>exit(0)</code> 时父进程还没有执行printf，所以冲不冲洗I/O流对父进程中printf的打印没有影响。（注意：此时并没有关闭标准I/O流）</p>
-</li>
-</ol>
-<p>早期的exit函数实现可能会关闭流，这样其实会导致<code>printf</code>不会产生任何输出。下面我们来模拟一下exit函数会关闭流的情况：</p>
-<pre><code><span class="preprocessor">#<span class="keyword">include</span> <span class="string">"apue.h"</span></span>
-
-<span class="keyword">int</span> glob = <span class="number">6</span>;
-
-<span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span>
-</span>{
-    <span class="keyword">int</span> var;
-    <span class="keyword">pid_t</span> pid;
-
-    var = <span class="number">88</span>; 
-    <span class="built_in">printf</span>(<span class="string">"before vfork\n"</span>);
-
-    <span class="keyword">if</span>((pid = vfork()) &lt; <span class="number">0</span>)
-    {   
-        err_sys(<span class="string">"fork error"</span>);
-    }<span class="keyword">else</span> <span class="keyword">if</span>(pid == <span class="number">0</span>)
-    {   
-        glob ++; 
-        var ++; 
-        fclose(<span class="built_in">stdout</span>);
-           <span class="built_in">exit</span>(<span class="number">0</span>);
-    }   
-    <span class="keyword">int</span> i = <span class="built_in">printf</span>(<span class="string">"pid = %d, glob = %d, var = %d\n"</span>, getpid(), glob, var);
-    <span class="keyword">char</span> outbuf[<span class="number">5</span>];
-    <span class="built_in">sprintf</span>(outbuf, <span class="string">"%d\n"</span>, i); 
-    write(STDOUT_FILENO, outbuf, <span class="built_in">strlen</span>(outbuf));
-
-    <span class="built_in">exit</span>(<span class="number">0</span>);
-}
-</code></pre><p>运行结果：</p>
-<pre><code>$./<span class="tag">a</span><span class="class">.out</span>
-before vfork
--<span class="number">1</span>
-</code></pre><p>此时printf出错返回-1.因为我们在<code>exit(0)</code>之前将标准输出关闭了（注意文件描述符STDOUT_FILENO没有被关闭），由于子进程与父进程共享同一标准输出，所以会导致printf打印失败。</p>
-<p>其实上面的解释还有一个疑问<code>fclose</code>会关闭I/O流为什么不关闭I/O流对应的文件描述符呢？<br>我个人的理解是标准I/O函数是在用户态执行的函数，而文件I/O是在内核态执行的函数，fclose只负责将流关闭而不去破坏内核态的执行状态。<br>标准I/O流合文件I/O流的关系我的理解可用下图表示，不对之处敬请指正。<br><img src="http://7xoxkx.com1.z0.glb.clouddn.com/standard-io-and-file-io.png" alt=""></p>
-
+</code></pre>
     
   </div>
   <footer class="end-sep">
     
+      
+        <div class="alignleft">
+          <a href="/2016/01/06/exit-and-_exit/#more" class="more-link">阅读全文</a>
+        </div>
       
       
     
