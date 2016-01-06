@@ -63,7 +63,8 @@ int main()
     if((pid = vfork()) &amp;lt; 0)
     {   
         err_sys(&quot;">
-<meta property="og:updated_time" content="2016-01-06T08:48:44.000Z">
+<meta property="og:image" content="http://7xoxkx.com1.z0.glb.clouddn.com/standard-io-and-file-io.png">
+<meta property="og:updated_time" content="2016-01-06T08:54:56.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="APUE读书笔记之exit()与_exit()对I/O缓冲的影响">
 <meta name="twitter:description" content="首先我们来看下书上的程序清单8-2
@@ -217,7 +218,7 @@ pid = <span class="number">29039</span>, glob = <span class="number">7</span>, <
 before vfork
 -<span class="number">1</span>
 </code></pre><p>此时printf出错返回-1.因为我们在<code>exit(0)</code>之前将标准输出关闭了（注意文件描述符STDOUT_FILENO没有被关闭），由于子进程与父进程共享同一标准输出，所以会导致printf打印失败。</p>
-<p>其实上面的解释还有一个疑问<code>fclose</code>会关闭I/O流为什么不关闭I/O流对应的文件描述符呢？<br>我个人的理解是标准I/O函数是在用户态执行的函数，而文件I/O是在内核态执行的函数，fclose只负责将流关闭而不去破坏内核态的执行状态。<br>标准I/O流合文件I/O流的关系我的理解可用下图表示，不对之处敬请指正。<br>![][]</p>
+<p>其实上面的解释还有一个疑问<code>fclose</code>会关闭I/O流为什么不关闭I/O流对应的文件描述符呢？<br>我个人的理解是标准I/O函数是在用户态执行的函数，而文件I/O是在内核态执行的函数，fclose只负责将流关闭而不去破坏内核态的执行状态。<br>标准I/O流合文件I/O流的关系我的理解可用下图表示，不对之处敬请指正。<br><img src="http://7xoxkx.com1.z0.glb.clouddn.com/standard-io-and-file-io.png" alt=""></p>
 
     
   </div>
