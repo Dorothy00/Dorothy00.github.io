@@ -4,13 +4,13 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="chrome=1">
   
-  <title>DOROTHY</title>
+  <title>APUE读书笔记之exit()与_exit()对I/O缓冲的影响 | DOROTHY</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   
     <meta name="author" content="Dorothy Zhang">
   
   
-    <meta name="description" content="#APUE读书笔记之exit()与_exit()对I/O缓冲的影响首先我们来看下书上的程序清单8-2
+    <meta name="description" content="首先我们来看下书上的程序清单8-2
 #include &quot;apue.h&quot;
 
 int glob = 6;
@@ -23,9 +23,11 @@ int main()
     var = 88;    
     printf(&quot;before vfork\n&quot;);
 
-    if((pid = vfork()) &amp;">
+    if((pid = vfork()) &amp;lt; 0)
+    {   
+        err_sys(&quot;">
   
-  <meta name="description" content="#APUE读书笔记之exit()与_exit()对I/O缓冲的影响首先我们来看下书上的程序清单8-2
+  <meta name="description" content="首先我们来看下书上的程序清单8-2
 #include &quot;apue.h&quot;
 
 int glob = 6;
@@ -38,12 +40,14 @@ int main()
     var = 88;    
     printf(&quot;before vfork\n&quot;);
 
-    if((pid = vfork()) &amp;">
+    if((pid = vfork()) &amp;lt; 0)
+    {   
+        err_sys(&quot;">
 <meta property="og:type" content="article">
-<meta property="og:title" content="DOROTHY">
+<meta property="og:title" content="APUE读书笔记之exit()与_exit()对I/O缓冲的影响">
 <meta property="og:url" content="http://yoursite.com/2016/01/06/exit-and-_exit/index.html">
 <meta property="og:site_name" content="DOROTHY">
-<meta property="og:description" content="#APUE读书笔记之exit()与_exit()对I/O缓冲的影响首先我们来看下书上的程序清单8-2
+<meta property="og:description" content="首先我们来看下书上的程序清单8-2
 #include &quot;apue.h&quot;
 
 int glob = 6;
@@ -56,11 +60,13 @@ int main()
     var = 88;    
     printf(&quot;before vfork\n&quot;);
 
-    if((pid = vfork()) &amp;">
-<meta property="og:updated_time" content="2016-01-06T08:42:35.000Z">
+    if((pid = vfork()) &amp;lt; 0)
+    {   
+        err_sys(&quot;">
+<meta property="og:updated_time" content="2016-01-06T08:48:44.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="DOROTHY">
-<meta name="twitter:description" content="#APUE读书笔记之exit()与_exit()对I/O缓冲的影响首先我们来看下书上的程序清单8-2
+<meta name="twitter:title" content="APUE读书笔记之exit()与_exit()对I/O缓冲的影响">
+<meta name="twitter:description" content="首先我们来看下书上的程序清单8-2
 #include &quot;apue.h&quot;
 
 int glob = 6;
@@ -73,7 +79,9 @@ int main()
     var = 88;    
     printf(&quot;before vfork\n&quot;);
 
-    if((pid = vfork()) &amp;">
+    if((pid = vfork()) &amp;lt; 0)
+    {   
+        err_sys(&quot;">
   
   
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -110,21 +118,21 @@ int main()
     
       <div class="icon"></div>
       <a href="/2016/01/06/exit-and-_exit/">
-  <time datetime="2016-01-06T08:42:35.000Z">
+  <time datetime="2016-01-06T08:48:08.000Z">
     2016-01-06
   </time>
 </a>
     
     
   
-    <h1 class="title"></h1>
+    <h1 class="title">APUE读书笔记之exit()与_exit()对I/O缓冲的影响</h1>
   
 
   </header>
   
   <div class="entry">
     
-      <p>#APUE读书笔记之exit()与_exit()对I/O缓冲的影响<br>首先我们来看下书上的程序清单8-2</p>
+      <p>首先我们来看下书上的程序清单8-2</p>
 <pre><code><span class="preprocessor">#<span class="keyword">include</span> <span class="string">"apue.h"</span></span>
 
 <span class="keyword">int</span> glob = <span class="number">6</span>;
@@ -216,7 +224,15 @@ before vfork
   <footer>
     
       
+  <div class="categories">
+    <a class="categories-link" href="/categories/技术/">技术</a>
+  </div>
+
       
+  <div class="tags">
+    <a class="tags-link" href="/tags/apue/">apue</a>
+  </div>
+
     
     <div class="clearfix"></div>
   </footer>
