@@ -567,6 +567,8 @@ article footer .tags:before {
 }
 #footer .heartbeat {
   margin: 0 0 0 4px;
+  position: relative;
+  top: -2.857142857142857px;
   display: inline-block;
   -webkit-animation: 1s heartbeat infinite;
   -moz-animation: 1s heartbeat infinite;
@@ -591,7 +593,11 @@ article footer .tags:before {
   -o-transform: rotate(-45deg);
   -ms-transform: rotate(-45deg);
   transform: rotate(-45deg);
-  left: 4px;
+  -webkit-transform-origin: 8px 4px;
+  -moz-transform-origin: 8px 4px;
+  -o-transform-origin: 8px 4px;
+  -ms-transform-origin: 8px 4px;
+  transform-origin: 8px 4px;
 }
 #footer .heartbeat::after {
   -webkit-transform: rotate(45deg);
@@ -599,7 +605,18 @@ article footer .tags:before {
   -o-transform: rotate(45deg);
   -ms-transform: rotate(45deg);
   transform: rotate(45deg);
-  right: 1px;
+  -webkit-transform-origin: 0 4px;
+  -moz-transform-origin: 0 4px;
+  -o-transform-origin: 0 4px;
+  -ms-transform-origin: 0 4px;
+  transform-origin: 0 4px;
+}
+#footer .heartbeat:last-of-type {
+  -webkit-animation: 1s heartbeat 600ms infinite;
+  -moz-animation: 1s heartbeat 600ms infinite;
+  -o-animation: 1s heartbeat 600ms infinite;
+  -ms-animation: 1s heartbeat 600ms infinite;
+  animation: 1s heartbeat 600ms infinite;
 }
 @-moz-keyframes heartbeat {
   0% {
