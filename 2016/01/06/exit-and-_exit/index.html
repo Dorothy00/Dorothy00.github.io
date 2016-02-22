@@ -11,78 +11,22 @@
   
   
     <meta name="description" content="首先我们来看下书上的程序清单8-2
-#include &quot;apue.h&quot;
-
-int glob = 6;
-
-int main()
-{
-    int var;
-    pid_t pid;
-
-    var = 88;    
-    printf(&quot;before vfork\n&quot;);
-
-    if((pid = vfork()) &amp;lt; 0)
-    {   
-        err_sys(&quot;">
+123456789101112131415161718192021222324#include &quot;apue.h&quot;int glob = 6;int main()&amp;#123;   int var;   pid_t pid;   var = 88;       printf(&quot;before vfork\n&quot;);   if((pid = vfork()) &amp;lt; 0)">
   
   <meta name="description" content="首先我们来看下书上的程序清单8-2
-#include &quot;apue.h&quot;
-
-int glob = 6;
-
-int main()
-{
-    int var;
-    pid_t pid;
-
-    var = 88;    
-    printf(&quot;before vfork\n&quot;);
-
-    if((pid = vfork()) &amp;lt; 0)
-    {   
-        err_sys(&quot;">
+123456789101112131415161718192021222324#include &quot;apue.h&quot;int glob = 6;int main()&amp;#123;   int var;   pid_t pid;   var = 88;       printf(&quot;before vfork\n&quot;);   if((pid = vfork()) &amp;lt; 0)">
 <meta property="og:type" content="article">
 <meta property="og:title" content="APUE读书笔记之exit()与_exit()对I/O缓冲的影响">
 <meta property="og:url" content="http://yoursite.com/2016/01/06/exit-and-_exit/index.html">
 <meta property="og:site_name" content="DOROTHY">
 <meta property="og:description" content="首先我们来看下书上的程序清单8-2
-#include &quot;apue.h&quot;
-
-int glob = 6;
-
-int main()
-{
-    int var;
-    pid_t pid;
-
-    var = 88;    
-    printf(&quot;before vfork\n&quot;);
-
-    if((pid = vfork()) &amp;lt; 0)
-    {   
-        err_sys(&quot;">
+123456789101112131415161718192021222324#include &quot;apue.h&quot;int glob = 6;int main()&amp;#123;   int var;   pid_t pid;   var = 88;       printf(&quot;before vfork\n&quot;);   if((pid = vfork()) &amp;lt; 0)">
 <meta property="og:image" content="http://7xoxkx.com1.z0.glb.clouddn.com/standard-io-and-file-io.png">
-<meta property="og:updated_time" content="2016-01-06T08:56:39.000Z">
+<meta property="og:updated_time" content="2016-02-22T15:39:00.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="APUE读书笔记之exit()与_exit()对I/O缓冲的影响">
 <meta name="twitter:description" content="首先我们来看下书上的程序清单8-2
-#include &quot;apue.h&quot;
-
-int glob = 6;
-
-int main()
-{
-    int var;
-    pid_t pid;
-
-    var = 88;    
-    printf(&quot;before vfork\n&quot;);
-
-    if((pid = vfork()) &amp;lt; 0)
-    {   
-        err_sys(&quot;">
+123456789101112131415161718192021222324#include &quot;apue.h&quot;int glob = 6;int main()&amp;#123;   int var;   pid_t pid;   var = 88;       printf(&quot;before vfork\n&quot;);   if((pid = vfork()) &amp;lt; 0)">
   
   
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -134,31 +78,8 @@ int main()
   <div class="entry">
     
       <p>首先我们来看下书上的程序清单8-2</p>
-<pre><code><span class="preprocessor">#<span class="keyword">include</span> <span class="string">"apue.h"</span></span>
-
-<span class="keyword">int</span> glob = <span class="number">6</span>;
-
-<span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span>
-</span>{
-    <span class="keyword">int</span> var;
-    <span class="keyword">pid_t</span> pid;
-
-    var = <span class="number">88</span>;    
-    <span class="built_in">printf</span>(<span class="string">"before vfork\n"</span>);
-
-    <span class="keyword">if</span>((pid = vfork()) &lt; <span class="number">0</span>)
-    {   
-        err_sys(<span class="string">"fork error"</span>);
-    }<span class="keyword">else</span> <span class="keyword">if</span>(pid == <span class="number">0</span>)
-    {   
-           glob ++; 
-           var ++; 
-        _exit(<span class="number">0</span>);
-    }   
-    <span class="built_in">printf</span>(<span class="string">"pid = %d, glob = %d, var = %d\n"</span>, getpid(), glob, var);
-    <span class="built_in">exit</span>(<span class="number">0</span>);
-}
-</code></pre><a id="more"></a>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="preprocessor">#<span class="keyword">include</span> <span class="string">"apue.h"</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">int</span> glob = <span class="number">6</span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span><br><span class="line"></span>&#123;</span><br><span class="line">   <span class="keyword">int</span> var;</span><br><span class="line">   <span class="keyword">pid_t</span> pid;</span><br><span class="line"></span><br><span class="line">   var = <span class="number">88</span>;    </span><br><span class="line">   <span class="built_in">printf</span>(<span class="string">"before vfork\n"</span>);</span><br><span class="line"></span><br><span class="line">   <span class="keyword">if</span>((pid = vfork()) &lt; <span class="number">0</span>)</span><br><span class="line">   &#123;   </span><br><span class="line">       err_sys(<span class="string">"fork error"</span>);</span><br><span class="line">    &#125;<span class="keyword">else</span> <span class="keyword">if</span>(pid == <span class="number">0</span>)</span><br><span class="line">    &#123;   </span><br><span class="line">       	glob ++; </span><br><span class="line">        var ++; </span><br><span class="line">        _exit(<span class="number">0</span>);</span><br><span class="line">    &#125;   </span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"pid = %d, glob = %d, var = %d\n"</span>, getpid(), glob, var);</span><br><span class="line">    <span class="built_in">exit</span>(<span class="number">0</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<a id="more"></a>
 <p>运行结果：</p>
 <pre><code>$./<span class="tag">a</span><span class="class">.out</span> 
 before vfork
