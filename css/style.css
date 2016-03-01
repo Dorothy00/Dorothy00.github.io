@@ -393,9 +393,10 @@ article .entry code {
   font-size: 0.8em;
 }
 article .entry pre {
-  padding: 10px 30px;
-  background-color: #000;
   margin: 0 0 16px;
+  padding: 10px 30px;
+  background-color: #3a3c42;
+  color: #f8f8f2;
   -webkit-border-radius: 5px;
   border-radius: 5px;
 }
