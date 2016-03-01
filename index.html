@@ -29,27 +29,28 @@
 </head>
 
 <body>
-  <div class="wrapper">
-    <header id="header">
-  <div class="title">
-    <h1><a href="/">DOROTHY</a></h1>
-    <p><a href="/"></a></p>
+  <header id="header">
+  <div class="title-wrapper">
+    <div class="title">
+      <h1><a href="/">DOROTHY</a></h1>
+      <p><a href="/"></a></p>
+    </div>
   </div>
-  <nav class="nav">
-    <ul>
-      
-        <li><a href="/">Home</a></li>
-      
-        <li><a href="/archives">Archives</a></li>
-      
-        <li><a href="/about">About</a></li>
-      
-      
-    </ul>
-    <div class="clearfix"></div>
-  </nav>
-  <div class="clearfix"></div>
 </header>
+<nav class="nav">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+      <li><a href="/about">About</a></li>
+    
+    
+  </ul>
+</nav>
+
+  <div class="wrapper">
     <div class="content">
 
 
@@ -59,18 +60,17 @@
     <article class="post">
   <header>
     
-      <div class="icon"></div>
+  
+    <h1 class="title"><a href="/2016/02/22/sigpending/">APUE 读书笔记之程序清单10-11中sigpending函数返回值异常的理解</a></h1>
+  
+
+    
       <a href="/2016/02/22/sigpending/">
   <time datetime="2016-02-22T15:22:20.000Z">
     2016-02-22
   </time>
 </a>
     
-    
-  
-    <h1 class="title"><a href="/2016/02/22/sigpending/">APUE 读书笔记之程序清单10-11中sigpending函数返回值异常的理解</a></h1>
-  
-
   </header>
   
   <div class="entry">
@@ -88,27 +88,26 @@
       
       
     
-    <div class="clearfix"></div>
   </footer>
 </article>
+
 
 
   
     <article class="post">
   <header>
     
-      <div class="icon"></div>
+  
+    <h1 class="title"><a href="/2016/01/06/exit-and-_exit/">APUE读书笔记之exit()与_exit()对I/O缓冲的影响</a></h1>
+  
+
+    
       <a href="/2016/01/06/exit-and-_exit/">
   <time datetime="2016-01-06T08:48:08.000Z">
     2016-01-06
   </time>
 </a>
     
-    
-  
-    <h1 class="title"><a href="/2016/01/06/exit-and-_exit/">APUE读书笔记之exit()与_exit()对I/O缓冲的影响</a></h1>
-  
-
   </header>
   
   <div class="entry">
@@ -126,27 +125,26 @@
       
       
     
-    <div class="clearfix"></div>
   </footer>
 </article>
+
 
 
   
     <article class="post">
   <header>
     
-      <div class="icon"></div>
+  
+    <h1 class="title"><a href="/2015/12/04/understand-session-of-php/">PHP之session理解</a></h1>
+  
+
+    
       <a href="/2015/12/04/understand-session-of-php/">
   <time datetime="2015-12-04T12:02:03.000Z">
     2015-12-04
   </time>
 </a>
     
-    
-  
-    <h1 class="title"><a href="/2015/12/04/understand-session-of-php/">PHP之session理解</a></h1>
-  
-
   </header>
   
   <div class="entry">
@@ -163,9 +161,9 @@
       
       
     
-    <div class="clearfix"></div>
   </footer>
 </article>
+
 
 
   
@@ -179,20 +177,18 @@
 </div>
   </div>
   <footer id="footer"><div class="copyright">
+  &copy; 2016
   
-  &copy; 2016 <a href="/">Dorothy Zhang</a>
+    <a href="/">Dorothy Zhang</a>
   
   <div class="heartbeat"></div><div class="heartbeat"></div>
+  <div class="heartbeat float"></div>
 </div>
-<div class="theme-copyright">
-  Theme by <a href="https://github.com/orderedlist" target="_blank">orderedlist</a>
-   |
-  Redesign by <a href="http://heroicyang.com/" target="_blank">Heroic Yang</a>
-</div>
-<div class="clearfix"></div>
 <script>
+  // heartbeart forcetouch
   var heartEl1 = document.querySelector('.heartbeat:first-of-type')
-  var heartEl2 = document.querySelector('.heartbeat:last-of-type')
+  var heartEl2 = document.querySelector('.heartbeat:nth-child(3)')
+  var heartFloat = document.querySelector('.heartbeat.float')
 
   function prepareForForceClick(event) {
     event.preventDefault();
@@ -202,11 +198,11 @@
   }
 
   function endForceClick(event) {
-    this.style.filter = 'blur(0)';
+    heartFloat.style.transform = 'scale(0)';
   }
 
   function forceChanged(event) {
-    this.style.filter = 'blur(' + event.webkitForce + 'px)';
+    heartFloat.style.transform = 'scale(' + 10*event.webkitForce + ')';
   }
 
   function setupForceClickBehavior(someElement)
@@ -219,9 +215,13 @@
 
   setupForceClickBehavior(heartEl1);
   setupForceClickBehavior(heartEl2);
+
+  heartFloat.addEventListener('click', function(){
+    heartFloat.style.transform = 'scale(0)'
+  }, false)
 </script>
 </footer>
-  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8/jquery.min.js"></script>
+  <script src="//cdn.bootcss.com/jquery/2.2.1/jquery.min.js"></script>
 <script src="/js/scale.fix.js"></script>
 <script src="/js/jquery.imagesloaded.min.js"></script>
 <script src="/js/gallery.js"></script>
@@ -236,6 +236,7 @@
     $('.fancybox').fancybox();
   })(jQuery);
 </script>
+
 
 </body>
 </html>

@@ -1,4 +1,3 @@
-@import url("https://fonts.googleapis.com/css?family=Droid+Serif:400italic,700italic,400,700");
 @font-face {
   font-family: 'FontAwesome';
   font-style: normal;
@@ -6,29 +5,19 @@
   src: url("fonts/fontawesome-webfont.eot?#iefix") format('embedded-opentype'), url("fonts/fontawesome-webfont.woff") format('woff'), url("fonts/fontawesome-webfont.ttf") format('truetype'), url("fonts/fontawesome-webfont.svg#FontAwesomeRegular") format('svg');
 }
 html {
-  background: #6c7989;
-  background: #6c7989 -webkit-linear-gradient(#6c7989, #434b55) fixed;
-  background: #6c7989 -moz-linear-gradient(#6c7989, #434b55) fixed;
-  background: #6c7989 -o-linear-gradient(#6c7989, #434b55) fixed;
-  background: #6c7989 -ms-linear-gradient(#6c7989, #434b55) fixed;
-  background: #6c7989 linear-gradient(#6c7989, #434b55) fixed;
-  background-image: url("images/checker.png");
+  background-color: #fff;
 }
 body {
-  padding: 50px 0;
+  padding: 0 0 50px;
   margin: 0;
-  font: 1em/1.5 "Droid Serif", Helvetica Neue, Helvetica, Arial, sans-serif;
+  font: 1em/1.5 -apple-system, "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB", STHeiti, "Microsoft YaHei", "Microsoft JhengHei", "Source Han Sans SC", "Noto Sans CJK SC", "Source Han Sans CN", "Noto Sans SC", "Source Han Sans TC", "Noto Sans CJK TC", "WenQuanYi Micro Hei", SimSun, sans-serif;
   color: #555;
   font-weight: 300;
 }
 .wrapper {
-  width: 680px;
-  margin: 0 auto;
-  background: #dedede;
-  -webkit-border-radius: 8px;
-  border-radius: 8px;
-  -webkit-box-shadow: rgba(0,0,0,0.2) 0 0 0 1px, rgba(0,0,0,0.45) 0 3px 10px;
-  box-shadow: rgba(0,0,0,0.2) 0 0 0 1px, rgba(0,0,0,0.45) 0 3px 10px;
+  position: relative;
+  margin: 300px 0 0;
+  background-color: #fff;
 }
 header,
 section,
@@ -48,11 +37,8 @@ strong {
   font-weight: 700;
 }
 .content {
-  background: -webkit-linear-gradient(#fafafa, #dedede 700px);
-  background: -moz-linear-gradient(#fafafa, #dedede 700px);
-  background: -o-linear-gradient(#fafafa, #dedede 700px);
-  background: -ms-linear-gradient(#fafafa, #dedede 700px);
-  background: linear-gradient(#fafafa, #dedede 700px);
+  margin: 0 auto;
+  width: 680px;
   -webkit-border-radius: 0 0 8px 8px;
   border-radius: 0 0 8px 8px;
   border-top: 1px solid #fff;
@@ -68,42 +54,68 @@ strong {
 .clearfix:after {
   clear: both;
 }
-#header {
-  -webkit-border-radius: 8px 8px 0 0;
-  border-radius: 8px 8px 0 0;
-  background: #c6eafa -webkit-linear-gradient(#ddfbfc, #c6eafa);
-  background: #c6eafa -moz-linear-gradient(#ddfbfc, #c6eafa);
-  background: #c6eafa -o-linear-gradient(#ddfbfc, #c6eafa);
-  background: #c6eafa -ms-linear-gradient(#ddfbfc, #c6eafa);
-  background: #c6eafa linear-gradient(#ddfbfc, #c6eafa);
-  position: relative;
-  padding: 15px 30px;
-  border-bottom: 1px solid #b2d2e1;
-}
-#header .title {
-  float: left;
-}
-#header .nav {
-  float: right;
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
   font-size: 0.875em;
-  font-family: "Droid Serif", Helvetica Neue, Helvetica, Arial, sans-serif;
+  font-family: -apple-system, "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB", STHeiti, "Microsoft YaHei", "Microsoft JhengHei", "Source Han Sans SC", "Noto Sans CJK SC", "Source Han Sans CN", "Noto Sans SC", "Source Han Sans TC", "Noto Sans CJK TC", "WenQuanYi Micro Hei", SimSun, sans-serif;
   line-height: 2.5em;
 }
-#header .nav ul {
+.nav a {
+  color: #fff;
+  font-weight: bold;
+}
+.nav ul {
   list-style: none;
 }
-#header .nav ul li {
+.nav ul li {
   float: left;
   margin-left: 26px;
 }
-#header h1 {
+.nav ul li:first-of-type {
   margin: 0;
-  padding: 0;
+}
+#header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 300px;
+  background-color: #c6eafa;
+  background-image: url("images/header-bg.jpg");
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  background-size: cover;
+  background-position: center;
+}
+#header .title-wrapper {
+  display: -webkit-box;
+  display: -moz-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: box;
+  display: flex;
+  content-justify: center;
+  -webkit-box-align: center;
+  -moz-box-align: center;
+  -o-box-align: center;
+  -ms-flex-align: center;
+  -webkit-align-items: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.4);
+  text-align: center;
+}
+#header .title {
+  width: 100%;
+}
+#header h1 a {
   font-size: 1.5em;
   font-weight: normal;
   line-height: 1.2;
-  color: #069;
-  text-shadow: rgba(255,255,255,0.9) 0 1px 0;
+  color: #fff;
 }
 #header.without-description h1 {
   margin: 10px 0;
@@ -116,8 +128,13 @@ strong {
   font-style: italic;
 }
 article {
-  padding: 15px 30px;
+  padding: 15px 20px;
   position: relative;
+  -webkit-animation: 500ms fade-in ease;
+  -moz-animation: 500ms fade-in ease;
+  -o-animation: 500ms fade-in ease;
+  -ms-animation: 500ms fade-in ease;
+  animation: 500ms fade-in ease;
 }
 article.page .icon {
   display: none;
@@ -207,7 +224,6 @@ article .gallery .next:before {
   font: 24px/1 FontAwesome;
   text-align: center;
   width: 24px;
-  text-shadow: 0 0 15px rgba(0,0,0,0.5);
   color: #fff;
   margin-top: -12px;
   top: 50%;
@@ -246,8 +262,6 @@ article header .icon {
   background: #069;
   -webkit-border-radius: 100em;
   border-radius: 100em;
-  -webkit-box-shadow: 0 0 4px rgba(0,0,0,0.4);
-  box-shadow: 0 0 4px rgba(0,0,0,0.4);
 }
 @media screen and (max-width: 600px) {
   article header .icon {
@@ -263,21 +277,19 @@ article header .icon:before {
   text-align: center;
 }
 article header time {
-  font: 0.9em "Droid Serif", Helvetica Neue, Helvetica, Arial, sans-serif;
-  margin-bottom: 5px;
-  display: block;
-  line-height: 1;
+  margin: 10px 0;
+  font: 0.9em -apple-system, "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB", STHeiti, "Microsoft YaHei", "Microsoft JhengHei", "Source Han Sans SC", "Noto Sans CJK SC", "Source Han Sans CN", "Noto Sans SC", "Source Han Sans TC", "Noto Sans CJK TC", "WenQuanYi Micro Hei", SimSun, sans-serif;
+  color: #808080;
 }
 article header .title {
-  font-size: 1.5em;
-  font-weight: normal;
-  line-height: 1.2;
   margin: 0;
   padding: 0;
-  text-shadow: rgba(255,255,255,0.9) 0 1px 0;
+  font-size: 26px;
+  line-height: 1.3;
+  font-weight: bold;
 }
 article header .title a {
-  color: #222;
+  color: #404040;
 }
 article header .title a:hover {
   color: #069;
@@ -341,8 +353,6 @@ article .entry video {
   border-radius: 3px;
   padding: 5px;
   background: #fff;
-  -webkit-box-shadow: 0 0 8px #aaa;
-  box-shadow: 0 0 8px #aaa;
 }
 article .entry img.nstyle,
 article .entry video.nstyle {
@@ -384,14 +394,17 @@ article .entry code {
 }
 article .entry pre {
   padding: 10px 30px;
-  background: #3a3c42;
-  color: #f8f8f2;
-  margin: 0 -30px 16px;
+  background-color: #000;
+  margin: 0 0 16px;
+  -webkit-border-radius: 5px;
+  border-radius: 5px;
 }
 @media screen and (max-width: 580px) {
   article .entry pre {
     margin: 0 -20px 16px;
     padding: 10px 20px;
+    -webkit-border-radius: 0;
+    border-radius: 0;
   }
 }
 article .entry pre code {
@@ -451,14 +464,17 @@ article .entry .text-lt {
 }
 article footer {
   font-size: 0.875em;
-  border-top: 1px solid #aaa;
+  border-top: 1px solid #eee;
   padding: 10px 0 0 0;
   margin-top: 10px;
 }
 article footer.end-sep {
   border-top: none;
-  border-bottom: 1px solid #aaa;
+  border-bottom: 1px solid #eee;
   padding: 0 0 10px 0;
+}
+article footer.end-sep > .alignleft {
+  display: none;
 }
 article footer a:before {
   font: 1.1em FontAwesome;
@@ -474,6 +490,11 @@ article footer a.comment-link:before {
 article footer .categories,
 article footer .tags {
   margin: 5px 0;
+  color: #c0c0c0;
+}
+article footer .categories > a,
+article footer .tags > a {
+  color: #c0c0c0;
 }
 article footer .categories:before,
 article footer .tags:before {
@@ -485,6 +506,94 @@ article footer .categories:before {
 }
 article footer .tags:before {
   content: '\f02b';
+}
+@-moz-keyframes fade-in {
+  0% {
+    -webkit-transform: translateY(200px);
+    -moz-transform: translateY(200px);
+    -o-transform: translateY(200px);
+    -ms-transform: translateY(200px);
+    transform: translateY(200px);
+    opacity: 0;
+    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+    filter: alpha(opacity=0);
+  }
+  100% {
+    -webkit-transform: translateY(0);
+    -moz-transform: translateY(0);
+    -o-transform: translateY(0);
+    -ms-transform: translateY(0);
+    transform: translateY(0);
+    opacity: 1;
+    -ms-filter: none;
+    filter: none;
+  }
+}
+@-webkit-keyframes fade-in {
+  0% {
+    -webkit-transform: translateY(200px);
+    -moz-transform: translateY(200px);
+    -o-transform: translateY(200px);
+    -ms-transform: translateY(200px);
+    transform: translateY(200px);
+    opacity: 0;
+    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+    filter: alpha(opacity=0);
+  }
+  100% {
+    -webkit-transform: translateY(0);
+    -moz-transform: translateY(0);
+    -o-transform: translateY(0);
+    -ms-transform: translateY(0);
+    transform: translateY(0);
+    opacity: 1;
+    -ms-filter: none;
+    filter: none;
+  }
+}
+@-o-keyframes fade-in {
+  0% {
+    -webkit-transform: translateY(200px);
+    -moz-transform: translateY(200px);
+    -o-transform: translateY(200px);
+    -ms-transform: translateY(200px);
+    transform: translateY(200px);
+    opacity: 0;
+    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+    filter: alpha(opacity=0);
+  }
+  100% {
+    -webkit-transform: translateY(0);
+    -moz-transform: translateY(0);
+    -o-transform: translateY(0);
+    -ms-transform: translateY(0);
+    transform: translateY(0);
+    opacity: 1;
+    -ms-filter: none;
+    filter: none;
+  }
+}
+@keyframes fade-in {
+  0% {
+    -webkit-transform: translateY(200px);
+    -moz-transform: translateY(200px);
+    -o-transform: translateY(200px);
+    -ms-transform: translateY(200px);
+    transform: translateY(200px);
+    opacity: 0;
+    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+    filter: alpha(opacity=0);
+  }
+  100% {
+    -webkit-transform: translateY(0);
+    -moz-transform: translateY(0);
+    -o-transform: translateY(0);
+    -ms-transform: translateY(0);
+    transform: translateY(0);
+    opacity: 1;
+    -ms-filter: none;
+    filter: none;
+  }
 }
 #comment {
   padding: 0 20px 20px;
@@ -500,7 +609,7 @@ article footer .tags:before {
 #pagination a {
   display: block;
   padding: 5px 10px;
-  font-family: "Droid Serif", Helvetica Neue, Helvetica, Arial, sans-serif;
+  font-family: -apple-system, "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB", STHeiti, "Microsoft YaHei", "Microsoft JhengHei", "Source Han Sans SC", "Noto Sans CJK SC", "Source Han Sans CN", "Noto Sans SC", "Source Han Sans TC", "Noto Sans CJK TC", "WenQuanYi Micro Hei", SimSun, sans-serif;
   background: #069;
   color: #fff;
   text-decoration: none;
@@ -557,12 +666,12 @@ article footer .tags:before {
   margin: 20px auto 0;
   padding: 20px 0 0;
   font-size: 0.875em;
-  color: #ccc;
+  color: #808080;
   overflow: hidden;
   text-align: center;
 }
 #footer a {
-  color: #fff;
+  color: #0085a1;
   font-style: italic;
 }
 #footer .heartbeat {
@@ -575,6 +684,30 @@ article footer .tags:before {
   -o-animation: 1s heartbeat infinite;
   -ms-animation: 1s heartbeat infinite;
   animation: 1s heartbeat infinite;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+#footer .heartbeat.float {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  -webkit-animation: none;
+  -moz-animation: none;
+  -o-animation: none;
+  -ms-animation: none;
+  animation: none;
+  -webkit-transform: scale(0);
+  -moz-transform: scale(0);
+  -o-transform: scale(0);
+  -ms-transform: scale(0);
+  transform: scale(0);
+  -webkit-transition: all ease 120ms;
+  -moz-transition: all ease 120ms;
+  -o-transition: all ease 120ms;
+  -ms-transition: all ease 120ms;
+  transition: all ease 120ms;
 }
 #footer .heartbeat::before,
 #footer .heartbeat::after {
@@ -611,7 +744,7 @@ article footer .tags:before {
   -ms-transform-origin: 0 4px;
   transform-origin: 0 4px;
 }
-#footer .heartbeat:last-of-type {
+#footer .heartbeat:nth-child(3) {
   -webkit-animation: 1s heartbeat 600ms infinite;
   -moz-animation: 1s heartbeat 600ms infinite;
   -o-animation: 1s heartbeat 600ms infinite;
@@ -799,10 +932,9 @@ article footer .tags:before {
     padding: 0;
   }
   .wrapper {
-    -webkit-border-radius: 0;
-    border-radius: 0;
-    -webkit-box-shadow: none;
-    box-shadow: none;
+    margin: 200px 0 0;
+  }
+  .content {
     width: 100%;
   }
   #footer {
@@ -816,12 +948,9 @@ article footer .tags:before {
 }
 @media screen and (max-width: 580px) {
   #header {
-    padding: 15px 20px;
+    height: 220px;
   }
-  #header .title {
-    float: none;
-  }
-  #header .nav ul li {
+  #header .nav li {
     margin-left: 10px;
   }
   #header p {
@@ -830,20 +959,23 @@ article footer .tags:before {
   .archives-title {
     padding: 0 20px;
   }
-  article {
-    padding: 15px 20px;
-  }
-  article .gallery {
+  .archives-title .gallery {
     margin: 0 -20px 16px;
   }
-  article .entry blockquote {
+  .archives-title .entry blockquote {
     margin: 0 -20px 20px;
+  }
+  .archives-title .entry pre {
+    -webkit-border-radius: 0;
+    border-radius: 0;
   }
 }
 figure.highlight {
-  margin: 0 -30px 16px;
+  margin: 0 0 16px;
   padding: 0 30px;
   background: #3a3c42;
+  -webkit-border-radius: 5px;
+  border-radius: 5px;
 }
 @media screen and (max-width: 580px) {
   figure.highlight {
@@ -881,6 +1013,8 @@ figure.highlight .gutter pre {
   border-right: 1px solid #fff;
   height: 100%;
   width: 30px;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
 }
 pre .comment,
 pre .template_comment,
