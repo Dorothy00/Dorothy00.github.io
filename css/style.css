@@ -657,6 +657,11 @@ article footer .tags:before {
 .archives-wrapper .archives > article {
   padding-top: 0;
   padding-bottom: 0;
+  -webkit-animation: none;
+  -moz-animation: none;
+  -o-animation: none;
+  -ms-animation: none;
+  animation: none;
 }
 .archives-wrapper .archives > article header .title {
   font-size: 1.1em;
