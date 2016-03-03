@@ -111,7 +111,8 @@
 
 </div>
   </div>
-  <footer id="footer"><div class="copyright">
+  <footer id="footer"><div class="footer-mask"></div>
+<div class="copyright">
   &copy; 2016
   
     <a href="/">Dorothy Zhang</a>
@@ -137,7 +138,7 @@
   }
 
   function forceChanged(event) {
-    heartFloat.style.transform = 'scale(' + 10*event.webkitForce + ')';
+    heartFloat.style.transform = 'scale(' + 8*event.webkitForce + ')';
   }
 
   function setupForceClickBehavior(someElement)
@@ -173,5 +174,6 @@
 </script>
 
 
+  <div class="footer-mask"></div>
 </body>
 </html>

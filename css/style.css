@@ -107,6 +107,15 @@ strong {
   height: 100%;
   background: rgba(0,0,0,0.4);
   text-align: center;
+  -webkit-backdrop-filter: blur(10px);
+  -webkit-transition: all ease 1000ms;
+  -moz-transition: all ease 1000ms;
+  -o-transition: all ease 1000ms;
+  -ms-transition: all ease 1000ms;
+  transition: all ease 1000ms;
+}
+#header .title-wrapper:hover {
+  -webkit-backdrop-filter: blur(0);
 }
 #header .title {
   width: 100%;
