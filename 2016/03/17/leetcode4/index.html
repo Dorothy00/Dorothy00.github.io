@@ -1,0 +1,197 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  
+  <title>Leetcode4 Median of Two Sorted Arrays | DOROTHY</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  
+    <meta name="author" content="Dorothy Zhang">
+  
+  
+    <meta name="description" content="题目是这样的：
+
+There are two sorted arrays nums1 and nums2 of size m and n respectively. Find the median of the two sorted arrays. The overall run time complexity should be O(log (m+n)).
+
+看到这个题目一般人都会想到用O(m">
+  
+  <meta name="description" content="题目是这样的：
+
+There are two sorted arrays nums1 and nums2 of size m and n respectively. Find the median of the two sorted arrays. The overall run time complexity should be O(log (m+n)).
+
+看到这个题目一般人都会想到用O(m">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Leetcode4 Median of Two Sorted Arrays">
+<meta property="og:url" content="http://yoursite.com/2016/03/17/leetcode4/index.html">
+<meta property="og:site_name" content="DOROTHY">
+<meta property="og:description" content="题目是这样的：
+
+There are two sorted arrays nums1 and nums2 of size m and n respectively. Find the median of the two sorted arrays. The overall run time complexity should be O(log (m+n)).
+
+看到这个题目一般人都会想到用O(m">
+<meta property="og:updated_time" content="2016-03-17T12:43:05.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Leetcode4 Median of Two Sorted Arrays">
+<meta name="twitter:description" content="题目是这样的：
+
+There are two sorted arrays nums1 and nums2 of size m and n respectively. Find the median of the two sorted arrays. The overall run time complexity should be O(log (m+n)).
+
+看到这个题目一般人都会想到用O(m">
+  
+  
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+</head>
+
+<body>
+  <header id="header">
+  <div class="title-wrapper">
+    <div class="title">
+      <h1><a href="/">DOROTHY</a></h1>
+      <p><a href="/"></a></p>
+    </div>
+  </div>
+</header>
+<nav class="nav">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+      <li><a href="/about">About</a></li>
+    
+    
+  </ul>
+</nav>
+
+  <div class="wrapper">
+    <div class="content"><article class="post">
+  <header>
+    
+  
+    <h1 class="title">Leetcode4 Median of Two Sorted Arrays</h1>
+  
+
+    
+      <a href="/2016/03/17/leetcode4/">
+  <time datetime="2016-03-17T12:38:28.000Z">
+    2016-03-17
+  </time>
+</a>
+    
+  </header>
+  
+  <div class="entry">
+    
+      <p>题目是这样的：</p>
+<blockquote>
+<p>There are two sorted arrays nums1 and nums2 of size m and n respectively. Find the median of the two sorted arrays. The overall run time complexity should be O(log (m+n)).</p>
+</blockquote>
+<p>看到这个题目一般人都会想到用O(m + n)的解法。即首先用O(m + n)的时间对nums1和nums2排序，再在组合后的数组里取出相应的中位数。题目要求使用O(log(m + n))的时间，我们很容易想到要使用二分法。但如何二分呢？在网上查阅了相关资料后得出如下解题思路。（自己单独还是想不出来呀。。。）</p>
+<a id="more"></a>
+<p>首先我们可以把问题转化为求第k大的数。要在已排好序的nums1和nums2中找到第k大的数，我们首先比较nums1[k/2]与nums2[k/2]的大小。下面分情况讨论：</p>
+<ol>
+<li>nums1[k/2-1] &lt; nums2[k/2-1] 说明nums1和nums2中至少有k/2-1 + k/2-1 = k - 2个数小于nums[k/2]则nums1[k/2-1]最多也只能是k - 1大的数，所以我们可以把nums1[0] ~ nums[k/2-1]排除掉。下一轮从余下未排除掉的数中查找。</li>
+<li>nums1[k/2-1] &gt; nums2[k/2-1] 与1的情况类似，只不过排除掉的数是nums2中的。</li>
+<li>nums1[k/2-1] = nums2[k/2-1] 由于有k - 2个数小于nums1[k/2-1]和nums2[k/2-1]，所以nums1[k/2-1]即是第k大的数。</li>
+</ol>
+<p>上面是求解问题的基本思路，我们还有一些细节需要考虑。</p>
+<ol>
+<li>如果k是奇数，APUE读书笔记之exit()与_exit()对I/O缓冲的影响<br>实际代码中 k = 2 * (k / 2) + 1。那么当nums1[k/2-1] = nums2[k/2-1]时，nums1[k/2-1]和nums2[k/2-1]就是第k - 1大的数。我们还需要比较nums1[k/2]和nums2[k/2]，较小的那一个才是第k大的数。</li>
+<li>如果k/2大于nums1Size，此时需要比较nums1[nums1Size]和nums2<a href="此处可以优化">nums1Size</a>.大于nums2Size时的情况与此类似。</li>
+</ol>
+<p>下面给出程序代码：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">double</span> <span class="title">findKth</span><span class="params">(<span class="keyword">int</span>* a, <span class="keyword">int</span> m, <span class="keyword">int</span>* b, <span class="keyword">int</span> n, <span class="keyword">int</span> k)</span></span><br><span class="line"></span>&#123;</span><br><span class="line">    <span class="keyword">if</span>(k &gt; (m + n) || !k)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"k should smaller than number of array elements"</span>);</span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span>(!m &amp;&amp; n)</span><br><span class="line">        <span class="keyword">return</span> b[k - <span class="number">1</span>];</span><br><span class="line">    <span class="keyword">if</span>(m &amp;&amp; !n)</span><br><span class="line">        <span class="keyword">return</span> a[k - <span class="number">1</span>];</span><br><span class="line">    <span class="keyword">if</span>(k == <span class="number">1</span>)</span><br><span class="line">        <span class="keyword">return</span> min(a[<span class="number">0</span>], b[<span class="number">0</span>]);</span><br><span class="line">    <span class="keyword">int</span> middle_k = k / <span class="number">2</span>;</span><br><span class="line">    <span class="keyword">bool</span> flag = (m &lt; n); <span class="comment">/* m is smaller than n */</span></span><br><span class="line">    <span class="keyword">int</span> index = min(middle_k, min(m , n));</span><br><span class="line">    <span class="keyword">if</span>(a[index - <span class="number">1</span>] == b[index - <span class="number">1</span>])</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span>(index == middle_k)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span>(k % <span class="number">2</span>)</span><br><span class="line">                <span class="keyword">return</span> min(a[index], b[index]);</span><br><span class="line">            <span class="keyword">else</span></span><br><span class="line">                <span class="keyword">return</span> a[index - <span class="number">1</span>];</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span> <span class="keyword">if</span>(flag)</span><br><span class="line">            <span class="keyword">return</span> findKth(a, <span class="number">0</span>, b, n, k - index);</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">            <span class="keyword">return</span> findKth(a, m, b, <span class="number">0</span>, k - index);</span><br><span class="line">    &#125;<span class="keyword">else</span> <span class="keyword">if</span>(a[index - <span class="number">1</span>] &lt; b[index - <span class="number">1</span>])</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">return</span> findKth(a + index, m - index, b, n, k - index);</span><br><span class="line">    &#125;<span class="keyword">else</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">return</span> findKth(a, m, b + index, n - index, k - index);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">min</span><span class="params">(<span class="keyword">int</span> a, <span class="keyword">int</span> b)</span></span><br><span class="line"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> a &gt; b ? b : a;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">double</span> <span class="title">findMedianSortedArrays</span><span class="params">(<span class="keyword">int</span>* nums1, <span class="keyword">int</span> nums1Size, <span class="keyword">int</span>* nums2, <span class="keyword">int</span> nums2Size)</span></span><br><span class="line"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> k = (nums1Size + nums2Size);</span><br><span class="line">    <span class="keyword">int</span> middle_k = k / <span class="number">2</span>;</span><br><span class="line">    <span class="keyword">if</span>(k % <span class="number">2</span>)</span><br><span class="line">        <span class="keyword">return</span> findKth(nums1, nums1Size, nums2, nums2Size, middle_k + <span class="number">1</span>);</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">return</span> (findKth(nums1, nums1Size, nums2, nums2Size, middle_k) + findKth(nums1, nums1Size, nums2, nums2Size, middle_k + <span class="number">1</span>)) / <span class="number">2</span>;</span><br><span class="line">    &#125;   </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+    
+  </div>
+  <footer>
+    
+      
+  <div class="categories">
+    <a class="categories-link" href="/categories/技术/">技术</a>
+  </div>
+
+      
+  <div class="tags">
+    <a class="tags-link" href="/tags/algorithm/">algorithm</a>
+  </div>
+
+    
+  </footer>
+</article>
+
+
+</div>
+  </div>
+  <footer id="footer"><div class="footer-mask"></div>
+<div class="copyright">
+  &copy; 2016
+  
+    <a href="/">Dorothy Zhang</a>
+  
+  <div class="heartbeat"></div><div class="heartbeat"></div>
+  <div class="heartbeat float"></div>
+</div>
+<script>
+  // heartbeart forcetouch
+  var heartEl1 = document.querySelector('.heartbeat:first-of-type')
+  var heartEl2 = document.querySelector('.heartbeat:nth-child(3)')
+  var heartFloat = document.querySelector('.heartbeat.float')
+
+  function prepareForForceClick(event) {
+    event.preventDefault();
+  }
+
+  function enterForceClick(event) {
+  }
+
+  function endForceClick(event) {
+    heartFloat.style.transform = 'scale(0)';
+  }
+
+  function forceChanged(event) {
+    heartFloat.style.transform = 'scale(' + 8*event.webkitForce + ')';
+  }
+
+  function setupForceClickBehavior(someElement)
+  {
+    someElement.addEventListener("webkitmouseforcewillbegin", prepareForForceClick, false);
+    someElement.addEventListener("webkitmouseforcedown", enterForceClick, false);
+    someElement.addEventListener("webkitmouseforceup", endForceClick, false);
+    someElement.addEventListener("webkitmouseforcechanged", forceChanged, false);
+  }
+
+  setupForceClickBehavior(heartEl1);
+  setupForceClickBehavior(heartEl2);
+
+  heartFloat.addEventListener('click', function(){
+    heartFloat.style.transform = 'scale(0)'
+  }, false)
+</script>
+</footer>
+  <script src="//cdn.bootcss.com/jquery/2.2.1/jquery.min.js"></script>
+<script src="/js/scale.fix.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+  (function($){
+    $('.fancybox').fancybox();
+  })(jQuery);
+</script>
+
+
+  <div class="footer-mask"></div>
+</body>
+</html>
