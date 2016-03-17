@@ -30,7 +30,7 @@ There are two sorted arrays nums1 and nums2 of size m and n respectively. Find t
 There are two sorted arrays nums1 and nums2 of size m and n respectively. Find the median of the two sorted arrays. The overall run time complexity should be O(log (m+n)).
 
 看到这个题目一般人都会想到用O(m">
-<meta property="og:updated_time" content="2016-03-17T12:43:05.000Z">
+<meta property="og:updated_time" content="2016-03-17T12:49:14.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Leetcode4 Median of Two Sorted Arrays">
 <meta name="twitter:description" content="题目是这样的：
@@ -102,7 +102,7 @@ There are two sorted arrays nums1 and nums2 of size m and n respectively. Find t
 </ol>
 <p>上面是求解问题的基本思路，我们还有一些细节需要考虑。</p>
 <ol>
-<li>如果k是奇数，APUE读书笔记之exit()与_exit()对I/O缓冲的影响<br>实际代码中 k = 2 * (k / 2) + 1。那么当nums1[k/2-1] = nums2[k/2-1]时，nums1[k/2-1]和nums2[k/2-1]就是第k - 1大的数。我们还需要比较nums1[k/2]和nums2[k/2]，较小的那一个才是第k大的数。</li>
+<li>如果k是奇数，实际代码中 k = 2 * (k / 2) + 1。那么当nums1[k/2-1] = nums2[k/2-1]时，nums1[k/2-1]和nums2[k/2-1]就是第k - 1大的数。我们还需要比较nums1[k/2]和nums2[k/2]，较小的那一个才是第k大的数。</li>
 <li>如果k/2大于nums1Size，此时需要比较nums1[nums1Size]和nums2<a href="此处可以优化">nums1Size</a>.大于nums2Size时的情况与此类似。</li>
 </ol>
 <p>下面给出程序代码：</p>
