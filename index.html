@@ -61,12 +61,12 @@
   <header>
     
   
-    <h1 class="title"><a href="/2016/07/26/java_通配符/">Java 通配符</a></h1>
+    <h1 class="title"><a href="/2016/07/26/java_通配符/"></a></h1>
   
 
     
       <a href="/2016/07/26/java_通配符/">
-  <time datetime="2016-07-26T07:58:28.000Z">
+  <time datetime="2016-07-26T11:50:35.000Z">
     2016-07-26
   </time>
 </a>
@@ -75,15 +75,26 @@
   
   <div class="entry">
     
-      <p>这几天看Thinking in Java 中范型一章，发现 Java 中的范型比 c++ 复杂很多，却没有 c++ 的强大。究其原因是因为 Java SE5 之前是没有范型的, 为了兼容 SE5 之前的代码，Java 的设计者在范型的设计上作了一定程度的让步。由于 Java 范型比较复杂，这里只对范型中的通配符做些纪录，以便日后查阅。<br>
+      <p>##Java 通配符</p>
+<p>这几天看Thinking in Java 中泛型一章，发现 Java 中的泛型比 C++ 复杂很多，却没有 C++ 的强大。究其原因是因为 Java SE5 之前是没有泛型的, 为了兼容 SE5 之前的代码，Java 的设计者在泛型的设计上作了一定程度的让步。由于 Java 泛型比较复杂，这里只对泛型中的通配符做些纪录，以便日后查阅。</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Fruit</span>&#123;</span>&#125;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Apple</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">Fruit</span>&#123;</span>&#125;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Jonathon</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">Apple</span>&#123;</span>&#125;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Orange</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">Fruit</span>&#123;</span>&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="extends_关键字">extends 关键字</h4><p>List&lt;? extends Fruit&gt; 表示具有任何从 Fruit 继承的类型的列表，那么这个类型是不确定的，只要 List 中持有的类型是 Fruit 或 Fruit 的子类都是合法的，如：</p>
+<p><code>List&lt;? extends Fruit&gt; apple ＝ new ArrayList&lt;Apple&gt;();</code></p>
+<p><code>List&lt;? extends Fruit&gt; fruit = new ArrayList&lt;Fruit&gt;();</code></p>
+<p>但是下面的代码段编译器就会报错：</p>
+<figure class="highlight oxygene"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">apple.<span class="keyword">add</span>(<span class="keyword">new</span> Apple());</span><br><span class="line">apple.<span class="keyword">add</span>(<span class="keyword">new</span> Fruit());</span><br><span class="line"></span><br><span class="line">fruit.<span class="keyword">add</span>(<span class="keyword">new</span> Apple());</span><br><span class="line">fruit.<span class="keyword">add</span>(<span class="keyword">new</span> Fruit());</span><br></pre></td></tr></table></figure>
+<p>第一次见到可能会感到非常奇怪。上述代码之所以会报错是因为 List&lt;? extends Fruit&gt; 是一个不确定的类型，而 add 方法的参数类型就是 List&lt;? extends Fruit&gt; 所以你不能向其中添加确切的类型。</p>
+<p>我们再来看看下面这段代码：</p>
+<figure class="highlight stata"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">List</span>&lt;? extends Fruit&gt; <span class="keyword">flist</span> = Arrays.asList(new Apple());</span><br><span class="line">Apple apple = (Apple) <span class="keyword">flist</span>.<span class="literal">get</span>(0);</span><br><span class="line"><span class="keyword">flist</span>.contains(apple);</span><br><span class="line"><span class="keyword">flist</span>.indexOf(apple);</span><br></pre></td></tr></table></figure>
+<p>这段代码不会报错。因为 contains 和 indexOf 方法的参数类型都是 Object，所以调用是合法的。</p>
+<h4 id="super_关键字">super 关键字</h4><p>我们可以用超类型通配符 super 来解决上述不能使用 add 添加对象的问题。通过将 List 的类型声明为 List&lt;? super Apple&gt; 来表明 List 中持有的类型是 Apple 的某个基类，那么现在我们就可以确定 Apple 或 Apple 的子类一定属于 &lt;? super Apple&gt; 这个类型。</p>
+<figure class="highlight processing"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> SuperTypeWildCards&#123;</span><br><span class="line">	<span class="keyword">static</span> <span class="keyword">void</span> writeTo(List&lt;? <span class="keyword">super</span> Apple&gt; apples)&#123;</span><br><span class="line">		apples.<span class="built_in">add</span>(<span class="keyword">new</span> Apple());</span><br><span class="line">		apples.<span class="built_in">add</span>(<span class="keyword">new</span> Jonathan());</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上面的代码就变成合法的了。</p>
+
     
   </div>
   <footer class="end-sep">
     
-      
-        <div class="alignleft">
-          <a href="/2016/07/26/java_通配符/#more" class="more-link">阅读全文</a>
-        </div>
       
       
     
