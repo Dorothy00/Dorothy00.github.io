@@ -4,24 +4,24 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="chrome=1">
   
-  <title>DOROTHY</title>
+  <title>Java 通配符 | DOROTHY</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   
     <meta name="author" content="Dorothy Zhang">
   
   
-    <meta name="description" content="title: Java 通配符date: 2016-7-26 15:28:08categories: 技术tags: java这几天看Thinking in Java 中泛型一章，发现 Java 中的泛型比 C++ 复杂很多，却没有 C++ 的强大。究其原因是因为 Java SE5 之前是没有泛型的, 为了兼容 SE5 之前的代码，Java 的设计者在泛型的设计上作了一定程度的让步。由于 Java">
+    <meta name="description" content="这几天看Thinking in Java 中泛型一章，发现 Java 中的泛型比 C++ 复杂很多，却没有 C++ 的强大。究其原因是因为 Java SE5 之前是没有泛型的, 为了兼容 SE5 之前的代码，Java 的设计者在泛型的设计上作了一定程度的让步。由于 Java 泛型比较复杂，这里只对泛型中的通配符做些纪录，以便日后查阅。">
   
-  <meta name="description" content="title: Java 通配符date: 2016-7-26 15:28:08categories: 技术tags: java这几天看Thinking in Java 中泛型一章，发现 Java 中的泛型比 C++ 复杂很多，却没有 C++ 的强大。究其原因是因为 Java SE5 之前是没有泛型的, 为了兼容 SE5 之前的代码，Java 的设计者在泛型的设计上作了一定程度的让步。由于 Java">
+  <meta name="description" content="这几天看Thinking in Java 中泛型一章，发现 Java 中的泛型比 C++ 复杂很多，却没有 C++ 的强大。究其原因是因为 Java SE5 之前是没有泛型的, 为了兼容 SE5 之前的代码，Java 的设计者在泛型的设计上作了一定程度的让步。由于 Java 泛型比较复杂，这里只对泛型中的通配符做些纪录，以便日后查阅。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="DOROTHY">
+<meta property="og:title" content="Java 通配符">
 <meta property="og:url" content="http://yoursite.com/2016/07/26/java_通配符/index.html">
 <meta property="og:site_name" content="DOROTHY">
-<meta property="og:description" content="title: Java 通配符date: 2016-7-26 15:28:08categories: 技术tags: java这几天看Thinking in Java 中泛型一章，发现 Java 中的泛型比 C++ 复杂很多，却没有 C++ 的强大。究其原因是因为 Java SE5 之前是没有泛型的, 为了兼容 SE5 之前的代码，Java 的设计者在泛型的设计上作了一定程度的让步。由于 Java">
-<meta property="og:updated_time" content="2016-07-26T11:54:39.000Z">
+<meta property="og:description" content="这几天看Thinking in Java 中泛型一章，发现 Java 中的泛型比 C++ 复杂很多，却没有 C++ 的强大。究其原因是因为 Java SE5 之前是没有泛型的, 为了兼容 SE5 之前的代码，Java 的设计者在泛型的设计上作了一定程度的让步。由于 Java 泛型比较复杂，这里只对泛型中的通配符做些纪录，以便日后查阅。">
+<meta property="og:updated_time" content="2016-07-26T11:56:11.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="DOROTHY">
-<meta name="twitter:description" content="title: Java 通配符date: 2016-7-26 15:28:08categories: 技术tags: java这几天看Thinking in Java 中泛型一章，发现 Java 中的泛型比 C++ 复杂很多，却没有 C++ 的强大。究其原因是因为 Java SE5 之前是没有泛型的, 为了兼容 SE5 之前的代码，Java 的设计者在泛型的设计上作了一定程度的让步。由于 Java">
+<meta name="twitter:title" content="Java 通配符">
+<meta name="twitter:description" content="这几天看Thinking in Java 中泛型一章，发现 Java 中的泛型比 C++ 复杂很多，却没有 C++ 的强大。究其原因是因为 Java SE5 之前是没有泛型的, 为了兼容 SE5 之前的代码，Java 的设计者在泛型的设计上作了一定程度的让步。由于 Java 泛型比较复杂，这里只对泛型中的通配符做些纪录，以便日后查阅。">
   
   
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -58,12 +58,12 @@
   <header>
     
   
-    <h1 class="title"></h1>
+    <h1 class="title">Java 通配符</h1>
   
 
     
       <a href="/2016/07/26/java_通配符/">
-  <time datetime="2016-07-26T11:54:39.000Z">
+  <time datetime="2016-07-26T07:28:08.000Z">
     2016-07-26
   </time>
 </a>
@@ -72,7 +72,7 @@
   
   <div class="entry">
     
-      <p>title: Java 通配符<br>date: 2016-7-26 15:28:08<br>categories: 技术<br>tags: java<br>这几天看Thinking in Java 中泛型一章，发现 Java 中的泛型比 C++ 复杂很多，却没有 C++ 的强大。究其原因是因为 Java SE5 之前是没有泛型的, 为了兼容 SE5 之前的代码，Java 的设计者在泛型的设计上作了一定程度的让步。由于 Java 泛型比较复杂，这里只对泛型中的通配符做些纪录，以便日后查阅。</p>
+      <p>这几天看Thinking in Java 中泛型一章，发现 Java 中的泛型比 C++ 复杂很多，却没有 C++ 的强大。究其原因是因为 Java SE5 之前是没有泛型的, 为了兼容 SE5 之前的代码，Java 的设计者在泛型的设计上作了一定程度的让步。由于 Java 泛型比较复杂，这里只对泛型中的通配符做些纪录，以便日后查阅。</p>
 <a id="more"></a>
 <figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Fruit</span>&#123;</span>&#125;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Apple</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">Fruit</span>&#123;</span>&#125;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Jonathon</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">Apple</span>&#123;</span>&#125;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Orange</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">Fruit</span>&#123;</span>&#125;</span><br></pre></td></tr></table></figure>
 <h4 id="extends_关键字">extends 关键字</h4><p>List&lt;? extends Fruit&gt; 表示具有任何从 Fruit 继承的类型的列表，那么这个类型是不确定的，只要 List 中持有的类型是 Fruit 或 Fruit 的子类都是合法的，如：</p>
@@ -93,7 +93,15 @@
   <footer>
     
       
+  <div class="categories">
+    <a class="categories-link" href="/categories/技术/">技术</a>
+  </div>
+
       
+  <div class="tags">
+    <a class="tags-link" href="/tags/java/">java</a>
+  </div>
+
     
   </footer>
 </article>
