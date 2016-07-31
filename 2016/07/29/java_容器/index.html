@@ -18,8 +18,8 @@
 <meta property="og:url" content="http://yoursite.com/2016/07/29/java_容器/index.html">
 <meta property="og:site_name" content="DOROTHY">
 <meta property="og:description" content="本文是《Thinking in Java》11和17章的读书笔记，仅介绍List Set和Map。">
-<meta property="og:image" content="http://yoursite.com/Users/dorothy/Downloads/容器类图.png">
-<meta property="og:updated_time" content="2016-07-31T11:35:13.000Z">
+<meta property="og:image" content="http://7xoxkx.com1.z0.glb.clouddn.com/%E5%AE%B9%E5%99%A8%E7%B1%BB%E5%9B%BE.png">
+<meta property="og:updated_time" content="2016-07-31T11:36:59.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Java 容器">
 <meta name="twitter:description" content="本文是《Thinking in Java》11和17章的读书笔记，仅介绍List Set和Map。">
@@ -75,7 +75,7 @@
     
       <p>本文是《Thinking in Java》11和17章的读书笔记，仅介绍List Set和Map。</p>
 <a id="more"></a>
-<h4 id="Java_容器类库图">Java 容器类库图</h4><p>下图是Java容器的简化图，其中省去了部分类的继承结构，如SortedSet, SortedMap等。<br><img src="/Users/dorothy/Downloads/容器类图.png" alt=""></p>
+<h4 id="Java_容器类库图">Java 容器类库图</h4><p>下图是Java容器的简化图，其中省去了部分类的继承结构，如SortedSet, SortedMap等。<br><img src="http://7xoxkx.com1.z0.glb.clouddn.com/%E5%AE%B9%E5%99%A8%E7%B1%BB%E5%9B%BE.png" alt=""></p>
 <h4 id="Collection_接口">Collection 接口</h4><p>Collection 接口是List和Set的父接口，其中主要声明了List和Set容器都需用到的常用方法：</p>
 <figure class="highlight aspectj"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">size</span><span class="params">()</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">boolean</span> <span class="title">isEmpty</span><span class="params">()</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">boolean</span> <span class="title">contains</span><span class="params">(Object o)</span></span>;</span><br><span class="line">Object[] toArray();</span><br><span class="line"><span class="function"><span class="keyword">boolean</span> <span class="title">add</span><span class="params">(E e)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">boolean</span> <span class="title">remove</span><span class="params">(Object o)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">boolean</span> <span class="title">containsAll</span><span class="params">(Collection&lt;?&gt; c)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">boolean</span> <span class="title">addAll</span><span class="params">(Collection&lt;? <span class="keyword">extends</span> E&gt; c)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">boolean</span> <span class="title">removeAll</span><span class="params">(Collection&lt;?&gt; c)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">boolean</span> <span class="title">retainAll</span><span class="params">(Collection&lt;?&gt; c)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">clear</span><span class="params">()</span></span>;</span><br><span class="line">Iterator&lt;E&gt; iterator();</span><br></pre></td></tr></table></figure>
 <p>注意，addAll方法的参数类型是Collection&lt;? extends E&gt;,这是为了方便将一个Collection通过addAll加入到另一个Collection。看下面的例子：</p>
