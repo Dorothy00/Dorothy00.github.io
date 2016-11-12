@@ -1,0 +1,182 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  
+  <title>iosched源码阅读之ToolBar自动隐藏分析 | DOROTHY</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  
+    <meta name="author" content="Dorothy Zhang">
+  
+  
+    <meta name="description" content="花了一下午看了一下iosched中ToolBar自动隐藏的机制，和知乎最新版Android客户端自动隐藏和显示的效果基本一致(应该是知乎仿照iosched写的？)。首先看下ToolBar自动隐藏的效果：">
+  
+  <meta name="description" content="花了一下午看了一下iosched中ToolBar自动隐藏的机制，和知乎最新版Android客户端自动隐藏和显示的效果基本一致(应该是知乎仿照iosched写的？)。首先看下ToolBar自动隐藏的效果：">
+<meta property="og:type" content="article">
+<meta property="og:title" content="iosched源码阅读之ToolBar自动隐藏分析">
+<meta property="og:url" content="http://yoursite.com/2016/11/12/iosched源码阅读之ToolBar自动隐藏分析/index.html">
+<meta property="og:site_name" content="DOROTHY">
+<meta property="og:description" content="花了一下午看了一下iosched中ToolBar自动隐藏的机制，和知乎最新版Android客户端自动隐藏和显示的效果基本一致(应该是知乎仿照iosched写的？)。首先看下ToolBar自动隐藏的效果：">
+<meta property="og:image" content="http://7xoxkx.com1.z0.glb.clouddn.com/scrollY.png">
+<meta property="og:image" content="http://7xoxkx.com1.z0.glb.clouddn.com/scrollY.png">
+<meta property="og:updated_time" content="2016-11-12T06:43:02.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="iosched源码阅读之ToolBar自动隐藏分析">
+<meta name="twitter:description" content="花了一下午看了一下iosched中ToolBar自动隐藏的机制，和知乎最新版Android客户端自动隐藏和显示的效果基本一致(应该是知乎仿照iosched写的？)。首先看下ToolBar自动隐藏的效果：">
+  
+  
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+</head>
+
+<body>
+  <header id="header">
+  <div class="title-wrapper">
+    <div class="title">
+      <h1><a href="/">DOROTHY</a></h1>
+      <p><a href="/"></a></p>
+    </div>
+  </div>
+</header>
+<nav class="nav">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+      <li><a href="/about">About</a></li>
+    
+    
+  </ul>
+</nav>
+
+  <div class="wrapper">
+    <div class="content"><article class="post">
+  <header>
+    
+  
+    <h1 class="title">iosched源码阅读之ToolBar自动隐藏分析</h1>
+  
+
+    
+      <a href="/2016/11/12/iosched源码阅读之ToolBar自动隐藏分析/">
+  <time datetime="2016-11-12T06:41:39.000Z">
+    2016-11-12
+  </time>
+</a>
+    
+  </header>
+  
+  <div class="entry">
+    
+      <p>花了一下午看了一下iosched中ToolBar自动隐藏的机制，和知乎最新版Android客户端自动隐藏和显示的效果基本一致(应该是知乎仿照iosched写的？)。首先看下ToolBar自动隐藏的效果：<br><a id="more"></a><br><img src="http://7xoxkx.com1.z0.glb.clouddn.com/scrollY.png" alt="此处输入图片的描述"></p>
+<p>可以看到当往上滑动一段距离时，ToolBar会自动隐藏，在往下滑动一段距离时ToolBar会自动显示。iosched是如何实现这个效果的呢？</p>
+<p>由于iosched中有多个页面都有ToolBar自动隐藏的效果，所以采用在BaseActivity中实现效果，并且暴露是否需要自动隐藏ToolBar的接口给它的子Activity，这样就不用每个Activity都实现一遍了。<br>首先看一下与自动隐藏／显示相关的变量：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">BaseActivity:</span><br><span class="line"></span><br><span class="line">  <span class="comment">/* 需要实现自动隐藏的actionbar */</span></span><br><span class="line">    <span class="keyword">private</span> Toolbar mActionBarToolbar;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*  自动隐藏功能是否开启 */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">boolean</span> mActionBarAutoHideEnabled = <span class="keyword">false</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* actionbar是否正在显示 */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">boolean</span> mActionBarShown = <span class="keyword">true</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* actionbar需要隐藏时的最小滑动距离（绝对） */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> mActionBarAutoHideMinY = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* actionbar需要隐藏时的最小滑动距离（相对，同一方向）*/</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> mActionBarAutoHideSensivity = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 在同一方向上相对已滑动了多少距离 */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> mActionBarAutoHideSignal = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 隐藏／显示时动画时长 */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> HEADER_HIDE_ANIM_DURATION = <span class="number">300</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 需要自动隐藏／显示的view（除了actionbar也可以添加其他需要自动隐藏／显示的view） */</span></span><br><span class="line">    <span class="keyword">private</span> ArrayList&lt;View&gt; mHideableHeaderViews = <span class="keyword">new</span> ArrayList&lt;View&gt;();</span><br></pre></td></tr></table></figure></p>
+<p>初始化ActionBar：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="annotation">@Override</span></span><br><span class="line"> <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setContentView</span><span class="params">(<span class="keyword">int</span> layoutResID)</span> </span>&#123;</span><br><span class="line">     <span class="keyword">super</span>.setContentView(layoutResID);</span><br><span class="line">     getActionBarToolbar();</span><br><span class="line"> &#125;</span><br><span class="line"></span><br><span class="line"> <span class="function"><span class="keyword">protected</span> Toolbar <span class="title">getActionBarToolbar</span><span class="params">()</span> </span>&#123;</span><br><span class="line">     <span class="keyword">if</span> (mActionBarToolbar == <span class="keyword">null</span>) &#123;</span><br><span class="line">         mActionBarToolbar = (Toolbar) findViewById(R.id.toolbar_actionbar);</span><br><span class="line">         <span class="keyword">if</span> (mActionBarToolbar != <span class="keyword">null</span>) &#123;</span><br><span class="line">             setSupportActionBar(mActionBarToolbar);</span><br><span class="line">         &#125;</span><br><span class="line">     &#125;</span><br><span class="line">     <span class="keyword">return</span> mActionBarToolbar;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure></p>
+<p>这里规定了Activity在设置ToolBar时必须将其id设为<code>toolbar_actionbar</code>。可以看到此处设置了Activity的ActionBar，并对未空的情况进行了判断，使其适用于所有Activity。</p>
+<p>对外暴露是否要自动隐藏／显示ActionBar的接口：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">enableActionBarAutoHide</span><span class="params">(<span class="keyword">final</span> ListView listView)</span> </span>&#123;</span><br><span class="line">     initActionBarAutoHide();</span><br><span class="line">     listView.setOnScrollListener(<span class="keyword">new</span> AbsListView.OnScrollListener() &#123;</span><br><span class="line"></span><br><span class="line">         <span class="comment">/** The heights of all items. */</span></span><br><span class="line">         <span class="keyword">private</span> Map&lt;Integer, Integer&gt; heights = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line">         <span class="keyword">private</span> <span class="keyword">int</span> lastCurrentScrollY = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">         <span class="annotation">@Override</span></span><br><span class="line">         <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onScrollStateChanged</span><span class="params">(AbsListView view, <span class="keyword">int</span> scrollState)</span> </span>&#123;</span><br><span class="line">         &#125;</span><br><span class="line"></span><br><span class="line">         <span class="annotation">@Override</span></span><br><span class="line">         <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onScroll</span><span class="params">(AbsListView view, <span class="keyword">int</span> firstVisibleItem, <span class="keyword">int</span> visibleItemCount,</span><br><span class="line">                              <span class="keyword">int</span> totalItemCount)</span> </span>&#123;</span><br><span class="line">             <span class="comment">// Get the first visible item's view.</span></span><br><span class="line">             View firstVisibleItemView = view.getChildAt(<span class="number">0</span>);</span><br><span class="line">             <span class="keyword">if</span> (firstVisibleItemView == <span class="keyword">null</span>) &#123;</span><br><span class="line">                 <span class="keyword">return</span>;</span><br><span class="line">             &#125;</span><br><span class="line"></span><br><span class="line">             <span class="comment">// Save the height of the visible item.</span></span><br><span class="line">             heights.put(firstVisibleItem, firstVisibleItemView.getHeight());</span><br><span class="line"></span><br><span class="line">             <span class="comment">// Calculate the height of all previous (hidden) items.</span></span><br><span class="line">             <span class="keyword">int</span> previousItemsHeight = <span class="number">0</span>;</span><br><span class="line">             <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; firstVisibleItem; i++) &#123;</span><br><span class="line">                 previousItemsHeight += heights.get(i) != <span class="keyword">null</span> ? heights.get(i) : <span class="number">0</span>;</span><br><span class="line">             &#125;</span><br><span class="line"></span><br><span class="line">             <span class="keyword">int</span> currentScrollY = previousItemsHeight - firstVisibleItemView.getTop()</span><br><span class="line">                     + view.getPaddingTop();</span><br><span class="line"></span><br><span class="line">             onMainContentScrolled(currentScrollY, currentScrollY - lastCurrentScrollY);</span><br><span class="line"></span><br><span class="line">             lastCurrentScrollY = currentScrollY;</span><br><span class="line">         &#125;</span><br><span class="line">     &#125;);</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure></p>
+<p>当需要开启此功能时，子Activity需要传递一个ListView给它。由此我们应该知道是否需要隐藏／显示ActionBar是根据ListView的滑动状态来判断的。<br>在<code>enableActionBarAutoHide</code>中，首先调用<code>initActionBarAutoHide()</code>来初始化一些值，我们看下这个方法：<br><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="title">private</span> void initActionBarAutoHide() &#123;</span><br><span class="line">    <span class="title">mActionBarAutoHideEnabled</span> = <span class="built_in">true</span>;</span><br><span class="line">    <span class="title">mActionBarAutoHideMinY</span> = getResources().getDimensionPixelSize(</span><br><span class="line">            R.dimen.action_bar_auto_hide_min_y);</span><br><span class="line">    <span class="title">mActionBarAutoHideSensivity</span> = getResources().getDimensionPixelSize(</span><br><span class="line">            R.dimen.action_bar_auto_hide_sensivity);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>主要设置了actionbar需要隐藏时的最小滑动距离和actionbar需要隐藏时在同一方向上的最小滑动距离（相对）。<br>然后在<code>enableActionBarAutoHide</code>中监听了ListView的滑动状态，<code>onScroll</code>方法中主要计算了ListView的当前滑动距离。ListView的滑动距离计算方法可用如下图来表示：<br><img src="http://7xoxkx.com1.z0.glb.clouddn.com/scrollY.png" alt="此处输入图片的描述"></p>
+<p>  那么已经滑动了的距离就是paddingTop + 不可见item高度的总和 + 第一个可见item距离屏幕顶部的距离。由于当第一个可见item滑出屏幕一部分时，<code>getTop</code>的值为负，所以需要减去<code>getTop</code>的值，那么计算结果就是：<br>  `int currentScrollY = previousItemsHeight - firstVisibleItemView.getTop()</p>
+<pre><code>+ view.getPaddingTop()<span class="escape">`。</span>我们再来看下<span class="escape">`p</span>reviousItemsHeight<span class="escape">`是</span>如何计算得到的：<span class="escape">`o</span>nScrollListener<span class="escape">`中</span>使用了<span class="escape">`M</span>ap&lt;Integer, Integer&gt; heights<span class="escape">`来</span>保存每个不可见item的高度。向上滑动时总是把第一个可见item的高度保存下来，这样当滑动一段距离后就可以累加得出不可见item的总高度。
+</code></pre><p>最后在<code>onScroll</code>中调用了<code>onMainContentScrolled</code>方法，这个方法会根据当前滑动值和两次滑动距离差来判断是否要隐藏／显示ActionBar。<br>我们来看下这个方法：<br><figure class="highlight aspectj"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="function"><span class="keyword">void</span> <span class="title">onMainContentScrolled</span><span class="params">(<span class="keyword">int</span> currentY, <span class="keyword">int</span> deltaY)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (deltaY &gt; mActionBarAutoHideSensivity) &#123;</span><br><span class="line">        deltaY = mActionBarAutoHideSensivity;</span><br><span class="line">    &#125; <span class="function"><span class="keyword">else</span> <span class="title">if</span> <span class="params">(deltaY &lt; -mActionBarAutoHideSensivity)</span> </span>&#123;</span><br><span class="line">        deltaY = -mActionBarAutoHideSensivity;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (Math.signum(deltaY) * Math.signum(mActionBarAutoHideSignal) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="comment">// deltaY is a motion opposite to the accumulated signal, so reset signal</span></span><br><span class="line">        mActionBarAutoHideSignal = deltaY;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// add to accumulated signal</span></span><br><span class="line">        mActionBarAutoHideSignal += deltaY;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">boolean</span> shouldShow = currentY &lt; mActionBarAutoHideMinY ||</span><br><span class="line">            (mActionBarAutoHideSignal &lt;= -mActionBarAutoHideSensivity);</span><br><span class="line"></span><br><span class="line">    autoShowOrHideActionBar(shouldShow);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>在分析这个方法之前，需要先搞清楚<code>deltaY</code>的正负问题：当向上滑动时，由于当前滑动距离比上一次滑动距离要大，所以<code>deltaY</code>为正；同理向下滑动时，<code>deltaY</code>为负。<br>下面这段代码个人觉得没有什么用，大家可以先略过不看啦。<br><figure class="highlight xquery"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (deltaY &gt; mActionBarAutoHideSensivity) &#123;</span><br><span class="line">    deltaY = mActionBarAutoHideSensivity;</span><br><span class="line">&#125; <span class="keyword">else</span> <span class="keyword">if</span> (deltaY &lt; -mActionBarAutoHideSensivity) &#123;</span><br><span class="line">    deltaY = -mActionBarAutoHideSensivity;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>我们先看这段代码：<br><figure class="highlight 1c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">boolean shouldShow = currentY &lt; mActionBarAutoHideMinY <span class="string">||</span></span><br><span class="line">                (mActionBarAutoHideSignal &lt;= -mActionBarAutoHideSensivity);</span><br></pre></td></tr></table></figure></p>
+<p>也就是说显示或隐藏ActionBar是由两个因素决定的：<code>currentY &lt; mActionBarAutoHideMinY</code>和<code>mActionBarAutoHideSignal &lt;= -mActionBarAutoHideSensivity</code>。<br>我们先看第一个因素：当前滑动距离小于需要隐藏ActionBar时的最小滑动距离时，此时滑动距离较小，ActionBar需要显示；当滑动距离超过阀值时，再隐藏ActionBar。这个因素控制ActionBar的隐藏／显示很好理解。那么第二个因素是如何控制的呢？<br>我们想象这样一个场景：当前滑动距离已远超过<code>mActionBarAutoHideMinY</code>这一阀值，那么ActionBar处于隐藏状态。当向上滑动时，由于<code>currentY</code>比阀值大很多，我们需要滑动到接近顶部才能显示ActionBar，这样的用户体验是不好的，我们需要向上滑动一点距离就能显示ActionBar，即使此时滑动距离大于阀值。<br>我们先来看下<code>mActionBarAutoHideSignal</code>的计算方式：<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (<span class="built_in">Math</span>.signum(deltaY) * <span class="built_in">Math</span>.signum(mActionBarAutoHideSignal) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">    <span class="comment">// deltaY is a motion opposite to the accumulated signal, so reset signal</span></span><br><span class="line">    mActionBarAutoHideSignal = deltaY;</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="comment">// add to accumulated signal</span></span><br><span class="line">    mActionBarAutoHideSignal += deltaY;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>不难看出当两次滑动在同一方向时，就累加<code>deltaY</code>，否则就重置<code>ActionBarAutoHideSignal</code>的值为<code>deltaY</code>，也就是从当前滑动方向重新计算。<br>要使<code>mActionBarAutoHideSignal&lt;=-mActionBarAutoHideSensivity</code><br><code>deltaY</code>必须为负的，也就是说必须向上滑动，当累积滑动距离超过<code>mActionBarAutoHideSensivity</code>时，就显示ActionBar。<br>总结一下：第一个因素是为了控制刚开始向上滑动时隐藏ActionBar或向下滑动快要到顶端时显示ActionBar的；第二个因素是为了控制，滑动距离较多时，向上滑动显示ActionBar的。<br>最后调用<code>autoShowOrHideActionBar(shouldShow)</code>完成真正的ActionBar显示／隐藏的动画过程。<br><figure class="highlight aspectj"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> <span class="function"><span class="keyword">void</span> <span class="title">autoShowOrHideActionBar</span><span class="params">(<span class="keyword">boolean</span> show)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (show == mActionBarShown) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    mActionBarShown = show;</span><br><span class="line">    onActionBarAutoShowOrHide(show);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>在这个方法中，会判断当前ActionBar的状态与要执行的状态是否相同，如果相同就不要执行了，不同再执行，并重置ActionBar的当前状态。<br>再来看下<code>onActionBarAutoShowOrHide(show)</code>方法：<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onActionBarAutoShowOrHide</span><span class="params">(boolean shown)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (final View view : mHideableHeaderViews) &#123;</span><br><span class="line">        <span class="keyword">if</span> (shown) &#123;</span><br><span class="line">            ViewCompat.animate(view)</span><br><span class="line">                    .translationY(<span class="number">0</span>)</span><br><span class="line">                    .alpha(<span class="number">1</span>)</span><br><span class="line">                    .setDuration(HEADER_HIDE_ANIM_DURATION)</span><br><span class="line">                    .setInterpolator(<span class="keyword">new</span> DecelerateInterpolator())</span><br><span class="line">                    <span class="comment">// Setting Alpha animations should be done using the</span></span><br><span class="line">                    <span class="comment">// layer_type set to layer_type_hardware for the duration of the animation.</span></span><br><span class="line">                    .withLayer();</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            ViewCompat.animate(view)</span><br><span class="line">                    .translationY(-view.getBottom())</span><br><span class="line">                    .alpha(<span class="number">0</span>)</span><br><span class="line">                    .setDuration(HEADER_HIDE_ANIM_DURATION)</span><br><span class="line">                    .setInterpolator(<span class="keyword">new</span> DecelerateInterpolator())</span><br><span class="line">                    <span class="comment">// Setting Alpha animations should be done using the</span></span><br><span class="line">                    <span class="comment">// layer_type set to layer_type_hardware for the duration of the animation.</span></span><br><span class="line">                    .withLayer();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这个方法中根据要显示的状态，对View做动画处理。前面说道<code>mHideableHeaderViews</code>中保存了要执行自动显示／隐藏的View，不仅仅是ActionBar。那么<code>mHideableHeaderViews</code>是在哪里设置值的呢？<br>系统提供了如下两个接口供子Activity调用：<br><figure class="highlight aspectj"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> <span class="function"><span class="keyword">void</span> <span class="title">registerHideableHeaderView</span><span class="params">(View hideableHeaderView)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (!mHideableHeaderViews.contains(hideableHeaderView)) &#123;</span><br><span class="line">        mHideableHeaderViews.add(hideableHeaderView);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">protected</span> <span class="function"><span class="keyword">void</span> <span class="title">deregisterHideableHeaderView</span><span class="params">(View hideableHeaderView)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (mHideableHeaderViews.contains(hideableHeaderView)) &#123;</span><br><span class="line">        mHideableHeaderViews.remove(hideableHeaderView);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>子Activity只需根据需要添加／删除相应的View就可以了。<br>至此，ActionBar的自动隐藏／显示机制已经分析完了。但还有一个问题需要注意：当我们在布局ActionBar和ListView时，如果采用LinearLayout，那么隐藏ActionBar时ListView上方就会出现空白。一般采用RelativeLayout，ListView设置一定的paddingTop值让ActionBar覆盖，但这个时候如果ActionBar处于隐藏状态，由于ListView中的内容不能跑到padding区域，显示效果仍然和使用LinearLayout的时候差不多。其实只要对ListView设置如下两个属性就可以了：<br><code>android:clipChildren=&quot;false&quot;</code>和<code>android:clipToPadding=&quot;false&quot;</code>，大家不要忘了哦。</p>
+
+    
+  </div>
+  <footer>
+    
+      
+  <div class="categories">
+    <a class="categories-link" href="/categories/技术/">技术</a>
+  </div>
+
+      
+  <div class="tags">
+    <a class="tags-link" href="/tags/Android-源码阅读/">Android 源码阅读</a>
+  </div>
+
+    
+  </footer>
+</article>
+
+
+</div>
+  </div>
+  <footer id="footer"><div class="footer-mask"></div>
+<div class="copyright">
+  &copy; 2016
+  
+    <a href="/">Dorothy Zhang</a>
+  
+  <div class="heartbeat"></div><div class="heartbeat"></div>
+  <div class="heartbeat float"></div>
+</div>
+<script>
+  // heartbeart forcetouch
+  var heartEl1 = document.querySelector('.heartbeat:first-of-type')
+  var heartEl2 = document.querySelector('.heartbeat:nth-child(3)')
+  var heartFloat = document.querySelector('.heartbeat.float')
+
+  function prepareForForceClick(event) {
+    event.preventDefault();
+  }
+
+  function enterForceClick(event) {
+  }
+
+  function endForceClick(event) {
+    heartFloat.style.transform = 'scale(0)';
+  }
+
+  function forceChanged(event) {
+    heartFloat.style.transform = 'scale(' + 8*event.webkitForce + ')';
+  }
+
+  function setupForceClickBehavior(someElement)
+  {
+    someElement.addEventListener("webkitmouseforcewillbegin", prepareForForceClick, false);
+    someElement.addEventListener("webkitmouseforcedown", enterForceClick, false);
+    someElement.addEventListener("webkitmouseforceup", endForceClick, false);
+    someElement.addEventListener("webkitmouseforcechanged", forceChanged, false);
+  }
+
+  setupForceClickBehavior(heartEl1);
+  setupForceClickBehavior(heartEl2);
+
+  heartFloat.addEventListener('click', function(){
+    heartFloat.style.transform = 'scale(0)'
+  }, false)
+</script>
+</footer>
+  <script src="//cdn.bootcss.com/jquery/2.2.1/jquery.min.js"></script>
+<script src="/js/scale.fix.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+  (function($){
+    $('.fancybox').fancybox();
+  })(jQuery);
+</script>
+
+
+  <div class="footer-mask"></div>
+</body>
+</html>
