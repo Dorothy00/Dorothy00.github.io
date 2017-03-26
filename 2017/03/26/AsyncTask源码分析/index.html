@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="chrome=1">
   
-  <title>DOROTHY</title>
+  <title>AsyncTask源码分析 | DOROTHY</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   
     <meta name="author" content="Dorothy Zhang">
@@ -14,13 +14,13 @@
   
   <meta name="description" content="网上关于AsyncTask的源码分析已经一大堆了，写此篇博文主要是为自己学习过程留个记录，加深印象。同时也为找实习做准备。AsyncTask的源码还是比较短的，我们首先分析它的组成部分：WorkerRunnable&amp;lt;Params, Result&amp;gt; mWorkerFutureTask&amp;lt;Result&amp;gt; mFutureEExecutor sDefaultExecutor = SE">
 <meta property="og:type" content="article">
-<meta property="og:title" content="DOROTHY">
+<meta property="og:title" content="AsyncTask源码分析">
 <meta property="og:url" content="http://yoursite.com/2017/03/26/AsyncTask源码分析/index.html">
 <meta property="og:site_name" content="DOROTHY">
 <meta property="og:description" content="网上关于AsyncTask的源码分析已经一大堆了，写此篇博文主要是为自己学习过程留个记录，加深印象。同时也为找实习做准备。AsyncTask的源码还是比较短的，我们首先分析它的组成部分：WorkerRunnable&amp;lt;Params, Result&amp;gt; mWorkerFutureTask&amp;lt;Result&amp;gt; mFutureEExecutor sDefaultExecutor = SE">
-<meta property="og:updated_time" content="2017-03-26T06:37:48.000Z">
+<meta property="og:updated_time" content="2017-03-26T06:43:59.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="DOROTHY">
+<meta name="twitter:title" content="AsyncTask源码分析">
 <meta name="twitter:description" content="网上关于AsyncTask的源码分析已经一大堆了，写此篇博文主要是为自己学习过程留个记录，加深印象。同时也为找实习做准备。AsyncTask的源码还是比较短的，我们首先分析它的组成部分：WorkerRunnable&amp;lt;Params, Result&amp;gt; mWorkerFutureTask&amp;lt;Result&amp;gt; mFutureEExecutor sDefaultExecutor = SE">
   
   
@@ -58,12 +58,12 @@
   <header>
     
   
-    <h1 class="title"></h1>
+    <h1 class="title">AsyncTask源码分析</h1>
   
 
     
       <a href="/2017/03/26/AsyncTask源码分析/">
-  <time datetime="2017-03-26T06:37:48.000Z">
+  <time datetime="2017-03-26T06:43:59.000Z">
     2017-03-26
   </time>
 </a>
