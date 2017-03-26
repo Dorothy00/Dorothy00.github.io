@@ -1,0 +1,172 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  
+  <title>DOROTHY</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  
+    <meta name="author" content="Dorothy Zhang">
+  
+  
+    <meta name="description" content="网上关于AsyncTask的源码分析已经一大堆了，写此篇博文主要是为自己学习过程留个记录，加深印象。同时也为找实习做准备。AsyncTask的源码还是比较短的，我们首先分析它的组成部分：WorkerRunnable&amp;lt;Params, Result&amp;gt; mWorkerFutureTask&amp;lt;Result&amp;gt; mFutureEExecutor sDefaultExecutor = SE">
+  
+  <meta name="description" content="网上关于AsyncTask的源码分析已经一大堆了，写此篇博文主要是为自己学习过程留个记录，加深印象。同时也为找实习做准备。AsyncTask的源码还是比较短的，我们首先分析它的组成部分：WorkerRunnable&amp;lt;Params, Result&amp;gt; mWorkerFutureTask&amp;lt;Result&amp;gt; mFutureEExecutor sDefaultExecutor = SE">
+<meta property="og:type" content="article">
+<meta property="og:title" content="DOROTHY">
+<meta property="og:url" content="http://yoursite.com/2017/03/26/AsyncTask源码分析/index.html">
+<meta property="og:site_name" content="DOROTHY">
+<meta property="og:description" content="网上关于AsyncTask的源码分析已经一大堆了，写此篇博文主要是为自己学习过程留个记录，加深印象。同时也为找实习做准备。AsyncTask的源码还是比较短的，我们首先分析它的组成部分：WorkerRunnable&amp;lt;Params, Result&amp;gt; mWorkerFutureTask&amp;lt;Result&amp;gt; mFutureEExecutor sDefaultExecutor = SE">
+<meta property="og:updated_time" content="2017-03-26T06:37:48.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="DOROTHY">
+<meta name="twitter:description" content="网上关于AsyncTask的源码分析已经一大堆了，写此篇博文主要是为自己学习过程留个记录，加深印象。同时也为找实习做准备。AsyncTask的源码还是比较短的，我们首先分析它的组成部分：WorkerRunnable&amp;lt;Params, Result&amp;gt; mWorkerFutureTask&amp;lt;Result&amp;gt; mFutureEExecutor sDefaultExecutor = SE">
+  
+  
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+</head>
+
+<body>
+  <header id="header">
+  <div class="title-wrapper">
+    <div class="title">
+      <h1><a href="/">DOROTHY</a></h1>
+      <p><a href="/"></a></p>
+    </div>
+  </div>
+</header>
+<nav class="nav">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+      <li><a href="/about">About</a></li>
+    
+    
+  </ul>
+</nav>
+
+  <div class="wrapper">
+    <div class="content"><article class="post">
+  <header>
+    
+  
+    <h1 class="title"></h1>
+  
+
+    
+      <a href="/2017/03/26/AsyncTask源码分析/">
+  <time datetime="2017-03-26T06:37:48.000Z">
+    2017-03-26
+  </time>
+</a>
+    
+  </header>
+  
+  <div class="entry">
+    
+      <p>网上关于AsyncTask的源码分析已经一大堆了，写此篇博文主要是为自己学习过程留个记录，加深印象。同时也为找实习做准备。<br>AsyncTask的源码还是比较短的，我们首先分析它的组成部分：<br><code>WorkerRunnable&lt;Params, Result&gt; mWorker</code><br><code>FutureTask&lt;Result&gt; mFuture</code><br><code>EExecutor sDefaultExecutor = SERIAL_EXECUTOR</code><br><code>Executor THREAD_POOL_EXECUTOR</code><br><code>InternalHandler</code><br><a id="more"></a><br>如上所示AsyncTask主要由以上四部分组成。下面我们来一一分析每部分的作用及意义。<br><code>mWorker</code>是一个<code>WorkerRunnable&lt;Params, Result&gt;</code>对象，这个对象是个抽象类，实现了<code>Callable&lt;Result&gt;</code>接口，代码如下所示：<br><figure class="highlight crystal"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> static <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">WorkerRunnable</span><span class="inheritance">&lt;<span class="parent">Params</span></span>, <span class="title">Result</span>&gt; <span class="title">implements</span> <span class="title">Callable</span><span class="inheritance">&lt;<span class="parent">Result</span></span>&gt; &#123;</span></span><br><span class="line">    <span class="constant">Params</span>[] mParams;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>那么可以直接将<code>WorkerRunnable&lt;Params, Result&gt;</code>看作是一个<code>Callable&lt;Result&gt;</code>接口，这个接口中的方法主要用来处理异步任务。<br><code>FutureTask&lt;Result&gt; mFuture</code>主要是用来配合<code>Callable&lt;Result&gt;</code>使用的，往<code>FutureTask&lt;Result&gt;</code>中传入一个<code>callable</code>就可以获取这个异步任务的返回结果。<br>这两个变量的初始化是在构造函数中进行的，我们看下构造函数的源码：<br><figure class="highlight nimrod"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">public <span class="type">AsyncTask</span>() &#123;</span><br><span class="line">    mWorker = new <span class="type">WorkerRunnable</span>&lt;<span class="type">Params</span>, <span class="type">Result</span>&gt;() &#123;</span><br><span class="line">        public <span class="type">Result</span> call() throws <span class="type">Exception</span> &#123;</span><br><span class="line">            mTaskInvoked.<span class="type">set</span>(<span class="literal">true</span>);</span><br><span class="line"></span><br><span class="line">            <span class="type">Process</span>.setThreadPriority(<span class="type">Process</span>.<span class="type">THREAD_PRIORITY_BACKGROUND</span>);</span><br><span class="line">            //noinspection unchecked</span><br><span class="line">            <span class="type">Result</span> <span class="literal">result</span> = doInBackground(mParams);</span><br><span class="line">            <span class="type">Binder</span>.flushPendingCommands();</span><br><span class="line">            <span class="keyword">return</span> postResult(<span class="literal">result</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    mFuture = new <span class="type">FutureTask</span>&lt;<span class="type">Result</span>&gt;(mWorker) &#123;</span><br><span class="line">        @<span class="type">Override</span></span><br><span class="line">        protected <span class="type">void</span> done() &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                postResultIfNotInvoked(get());</span><br><span class="line">            &#125; catch (<span class="type">InterruptedException</span> e) &#123;</span><br><span class="line">                android.util.<span class="type">Log</span>.w(<span class="type">LOG_TAG</span>, e);</span><br><span class="line">            &#125; catch (<span class="type">ExecutionException</span> e) &#123;</span><br><span class="line">                throw new <span class="type">RuntimeException</span>(<span class="string">"An error occurred while executing doInBackground()"</span>,</span><br><span class="line">                        e.getCause());</span><br><span class="line">            &#125; catch (<span class="type">CancellationException</span> e) &#123;</span><br><span class="line">                postResultIfNotInvoked(null);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>在<code>mWorker</code>的<code>call</code>方法中会调用<code>doInBackground</code>方法，由于call方法运行在后台线程，因而<code>doInBackground</code>方法也会运行在后台线程。</p>
+<p>真正的执行过程是从<code>executeOnExecutor(sDefaultExecutor, params)</code>方法开始的，我们先来看下这个方法的源码：<br><figure class="highlight aspectj"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="annotation">@MainThread</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> AsyncTask&lt;Params, Progress, Result&gt; executeOnExecutor(Executor exec,</span><br><span class="line">        Params... params) &#123;</span><br><span class="line">    <span class="keyword">if</span> (mStatus != Status.PENDING) &#123;</span><br><span class="line">        <span class="keyword">switch</span> (mStatus) &#123;</span><br><span class="line">            <span class="keyword">case</span> RUNNING:</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"Cannot execute task:"</span></span><br><span class="line">                        + <span class="string">" the task is already running."</span>);</span><br><span class="line">            <span class="keyword">case</span> FINISHED:</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"Cannot execute task:"</span></span><br><span class="line">                        + <span class="string">" the task has already been executed "</span></span><br><span class="line">                        + <span class="string">"(a task can be executed only once)"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    mStatus = Status.RUNNING;</span><br><span class="line"></span><br><span class="line">    onPreExecute();</span><br><span class="line"></span><br><span class="line">    mWorker.mParams = params;</span><br><span class="line"></span><br><span class="line">    exec.execute(mFuture);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">this</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>可见在任务开始时会先调用<code>onPreExecute()</code>,由于execute方法是在主线程中执行，<code>onPreExecute()</code>方法也会运行在主线程，由客户端实现，在任务开始前做一些准备工作。然后进入<code>exec.execute(mFuture)</code>。此时的exec就是<code>sDefaultExecutor</code>，而这个<code>sDefaultExecutor</code>就是<code>SERIAL_EXECUTOR</code>。我们再来看下<code>SERIAL_EXECUTOR</code>的源码：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">SerialExecutor</span> <span class="keyword">implements</span> <span class="title">Executor</span> </span>&#123;</span><br><span class="line">    <span class="keyword">final</span> ArrayDeque&lt;Runnable&gt; mTasks = <span class="keyword">new</span> ArrayDeque&lt;Runnable&gt;();</span><br><span class="line">    Runnable mActive;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">execute</span><span class="params">(<span class="keyword">final</span> Runnable r)</span> </span>&#123;</span><br><span class="line">        mTasks.offer(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    r.run();</span><br><span class="line">                &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">                    scheduleNext();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">        <span class="keyword">if</span> (mActive == <span class="keyword">null</span>) &#123;</span><br><span class="line">            scheduleNext();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">scheduleNext</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> ((mActive = mTasks.poll()) != <span class="keyword">null</span>) &#123;</span><br><span class="line">            THREAD_POOL_EXECUTOR.execute(mActive);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>可以看到execute过程就是将传输过来的任务加入队列中，如果mActive为空，就会从队列中取出一个任务交由<code>THREAD_POOL_EXECUTOR</code>执行，这个<code>THREAD_POOL_EXECUTOR</code>就是任务真正要执行的线程。可以看到<code>sDefaultExecutor</code>只负责任务的排队，因而AsyncTask中的任务默认情况下是串行执行的。<code>THREAD_POOL_EXECUTOR</code>是一个普通的线程池，就不作过多解释了。<br>知道了AsyncTask的任务执行过程，那么<code>onPogressUpdate</code> <code>onPostExecute</code>这些方法又是何时被调用的呢？开头我们列出了AsyncTask的主要组成部分，其中还有<code>InternalHandler</code>没有分析。没错这两个方法的执行需要<code>InternalHandler</code>。我们知道Handler常见的用法就是将执行环境切换到主线程，来看下<code>InternalHandler</code>的源码：<br><figure class="highlight nimrod"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">private <span class="keyword">static</span> class <span class="type">InternalHandler</span> extends <span class="type">Handler</span> &#123;</span><br><span class="line">    public <span class="type">InternalHandler</span>() &#123;</span><br><span class="line">        super(<span class="type">Looper</span>.getMainLooper());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @<span class="type">SuppressWarnings</span>(&#123;<span class="string">"unchecked"</span>, <span class="string">"RawUseOfParameterizedType"</span>&#125;)</span><br><span class="line">    @<span class="type">Override</span></span><br><span class="line">    public <span class="type">void</span> handleMessage(<span class="type">Message</span> msg) &#123;</span><br><span class="line">        <span class="type">AsyncTaskResult</span>&lt;?&gt; <span class="literal">result</span> = (<span class="type">AsyncTaskResult</span>&lt;?&gt;) msg.obj;</span><br><span class="line">        switch (msg.what) &#123;</span><br><span class="line">            <span class="keyword">case</span> <span class="type">MESSAGE_POST_RESULT</span>:</span><br><span class="line">                // <span class="type">There</span> <span class="keyword">is</span> only one <span class="literal">result</span></span><br><span class="line">                <span class="literal">result</span>.mTask.finish(<span class="literal">result</span>.mData[<span class="number">0</span>]);</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">case</span> <span class="type">MESSAGE_POST_PROGRESS</span>:</span><br><span class="line">                <span class="literal">result</span>.mTask.onProgressUpdate(<span class="literal">result</span>.mData);</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>首先需要注意一下构造函数，<code>InternalHandler</code>默认使用的是 <code>mainLooper</code>,因而AsyncTask必须在主线程中创建。<br>主要处理了两个消息事件：<code>MESSAGE_POST_RESULT</code> <code>MESSAGE_POST_PROGRESS</code>，。<code>MESSAGE_POST_RESULT</code>中通过调用<code>finish()</code>方法最终调用<code>onPostExecute()</code>方法。<code>MESSAGE_POST_PROGRESS</code> 中直接调用了<code>onProgressUpdate()</code>方法。那么这两个消息是何时发送的呢？<br>在<code>mWorker</code>的call方法实现中当<code>doInBackground</code>执行完了会调用<code>postResult</code>方法，看下这个方法的源码：<br><figure class="highlight nimrod"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">private <span class="type">Result</span> postResult(<span class="type">Result</span> <span class="literal">result</span>) &#123;</span><br><span class="line">    @<span class="type">SuppressWarnings</span>(<span class="string">"unchecked"</span>)</span><br><span class="line">    <span class="type">Message</span> message = getHandler().obtainMessage(<span class="type">MESSAGE_POST_RESULT</span>,</span><br><span class="line">            new <span class="type">AsyncTaskResult</span>&lt;<span class="type">Result</span>&gt;(this, <span class="literal">result</span>));</span><br><span class="line">    message.sendToTarget();</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">result</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>可见这个方法就是发送<code>MESSAGE_POST_RESULT</code>消息给handler。</p>
+<p>再来看下<code>publishProgress</code>方法，当用户在具体的<code>doInBackground</code>方法实现中调用此方法时，此方法会发送<code>MESSAGE_POST_PROGRESS</code>消息，看下源码：<br><figure class="highlight aspectj"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="annotation">@WorkerThread</span></span><br><span class="line"><span class="keyword">protected</span> <span class="keyword">final</span> <span class="function"><span class="keyword">void</span> <span class="title">publishProgress</span><span class="params">(Progress... values)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (!isCancelled()) &#123;</span><br><span class="line">        getHandler().obtainMessage(MESSAGE_POST_PROGRESS,</span><br><span class="line">                <span class="keyword">new</span> AsyncTaskResult&lt;Progress&gt;(<span class="keyword">this</span>, values)).sendToTarget();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>至此，AsyncTask的源码就分析完毕了，是不是非常简单？</p>
+
+    
+  </div>
+  <footer>
+    
+      
+  <div class="categories">
+    <a class="categories-link" href="/categories/技术¬/">技术¬</a>
+  </div>
+
+      
+  <div class="tags">
+    <a class="tags-link" href="/tags/源码-分析/">源码 分析</a>
+  </div>
+
+    
+  </footer>
+</article>
+
+
+</div>
+  </div>
+  <footer id="footer"><div class="footer-mask"></div>
+<div class="copyright">
+  &copy; 2017
+  
+    <a href="/">Dorothy Zhang</a>
+  
+  <div class="heartbeat"></div><div class="heartbeat"></div>
+  <div class="heartbeat float"></div>
+</div>
+<script>
+  // heartbeart forcetouch
+  var heartEl1 = document.querySelector('.heartbeat:first-of-type')
+  var heartEl2 = document.querySelector('.heartbeat:nth-child(3)')
+  var heartFloat = document.querySelector('.heartbeat.float')
+
+  function prepareForForceClick(event) {
+    event.preventDefault();
+  }
+
+  function enterForceClick(event) {
+  }
+
+  function endForceClick(event) {
+    heartFloat.style.transform = 'scale(0)';
+  }
+
+  function forceChanged(event) {
+    heartFloat.style.transform = 'scale(' + 8*event.webkitForce + ')';
+  }
+
+  function setupForceClickBehavior(someElement)
+  {
+    someElement.addEventListener("webkitmouseforcewillbegin", prepareForForceClick, false);
+    someElement.addEventListener("webkitmouseforcedown", enterForceClick, false);
+    someElement.addEventListener("webkitmouseforceup", endForceClick, false);
+    someElement.addEventListener("webkitmouseforcechanged", forceChanged, false);
+  }
+
+  setupForceClickBehavior(heartEl1);
+  setupForceClickBehavior(heartEl2);
+
+  heartFloat.addEventListener('click', function(){
+    heartFloat.style.transform = 'scale(0)'
+  }, false)
+</script>
+</footer>
+  <script src="//cdn.bootcss.com/jquery/2.2.1/jquery.min.js"></script>
+<script src="/js/scale.fix.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+  (function($){
+    $('.fancybox').fancybox();
+  })(jQuery);
+</script>
+
+
+  <div class="footer-mask"></div>
+</body>
+</html>
