@@ -1,0 +1,190 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  
+  <title>DOROTHY</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  
+    <meta name="author" content="Dorothy Zhang">
+  
+  
+    <meta name="description" content="title: Java中的instanceof、isInstance、isAssignableFrom用法
+date: 2017-7-2 21:00:00
+categories: 技术
+tags: Java
+先上测试代码：
+1234567891011121314151617181920212223242526272829303132public class TestInstance &amp;#123;">
+  
+  <meta name="description" content="title: Java中的instanceof、isInstance、isAssignableFrom用法
+date: 2017-7-2 21:00:00
+categories: 技术
+tags: Java
+先上测试代码：
+1234567891011121314151617181920212223242526272829303132public class TestInstance &amp;#123;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="DOROTHY">
+<meta property="og:url" content="http://yoursite.com/2017/07/02/Java中的instanceof、isInstance、isAssignableFrom用法/index.html">
+<meta property="og:site_name" content="DOROTHY">
+<meta property="og:description" content="title: Java中的instanceof、isInstance、isAssignableFrom用法
+date: 2017-7-2 21:00:00
+categories: 技术
+tags: Java
+先上测试代码：
+1234567891011121314151617181920212223242526272829303132public class TestInstance &amp;#123;">
+<meta property="og:updated_time" content="2017-07-02T13:02:02.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="DOROTHY">
+<meta name="twitter:description" content="title: Java中的instanceof、isInstance、isAssignableFrom用法
+date: 2017-7-2 21:00:00
+categories: 技术
+tags: Java
+先上测试代码：
+1234567891011121314151617181920212223242526272829303132public class TestInstance &amp;#123;">
+  
+  
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+</head>
+
+<body>
+  <header id="header">
+  <div class="title-wrapper">
+    <div class="title">
+      <h1><a href="/">DOROTHY</a></h1>
+      <p><a href="/"></a></p>
+    </div>
+  </div>
+</header>
+<nav class="nav">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+      <li><a href="/about">About</a></li>
+    
+    
+  </ul>
+</nav>
+
+  <div class="wrapper">
+    <div class="content"><article class="post">
+  <header>
+    
+  
+    <h1 class="title"></h1>
+  
+
+    
+      <a href="/2017/07/02/Java中的instanceof、isInstance、isAssignableFrom用法/">
+  <time datetime="2017-07-02T13:02:02.000Z">
+    2017-07-02
+  </time>
+</a>
+    
+  </header>
+  
+  <div class="entry">
+    
+      <p>title: Java中的instanceof、isInstance、isAssignableFrom用法</p>
+<p>date: 2017-7-2 21:00:00</p>
+<p>categories: 技术</p>
+<p>tags: Java</p>
+<p>先上测试代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TestInstance</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">		A a = <span class="keyword">new</span> A();</span><br><span class="line">		B b = <span class="keyword">new</span> B();</span><br><span class="line">		A ab = <span class="keyword">new</span> B();</span><br><span class="line">		</span><br><span class="line">		System.out.println(a <span class="keyword">instanceof</span> A);  <span class="comment">// true</span></span><br><span class="line">		System.out.println(b <span class="keyword">instanceof</span> A);  <span class="comment">// true</span></span><br><span class="line">		System.out.println(a <span class="keyword">instanceof</span> B);  <span class="comment">// false</span></span><br><span class="line">		System.out.println(ab <span class="keyword">instanceof</span> A); <span class="comment">// true</span></span><br><span class="line">		System.out.println(ab <span class="keyword">instanceof</span> B); <span class="comment">// true</span></span><br><span class="line">		System.out.println(<span class="keyword">null</span> <span class="keyword">instanceof</span> A); <span class="comment">// false</span></span><br><span class="line">		</span><br><span class="line">		System.out.println(A.class.isInstance(a));  <span class="comment">// true</span></span><br><span class="line">		System.out.println(A.class.isInstance(b));  <span class="comment">// true</span></span><br><span class="line">		System.out.println(B.class.isInstance(a));  <span class="comment">// false</span></span><br><span class="line">		System.out.println(A.class.isInstance(ab)); <span class="comment">// true</span></span><br><span class="line">		System.out.println(B.class.isInstance(ab));  <span class="comment">// true</span></span><br><span class="line">		System.out.println(A.class.isInstance(<span class="keyword">null</span>)); <span class="comment">// false</span></span><br><span class="line">		</span><br><span class="line">		System.out.println(A.class.isAssignableFrom(B.class));  <span class="comment">// true</span></span><br><span class="line">		System.out.println(B.class.isAssignableFrom(A.class));  <span class="comment">// false</span></span><br><span class="line"></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span></span>&#123;	</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">B</span> <span class="keyword">extends</span> <span class="title">A</span></span>&#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<a id="more"></a>
+<p>说明：</p>
+<p><code>instanceof</code>的使用方法为<code>obj instanceof class</code> 如果 class obj1 = obj成立的话返回true，否则返回false。这里有两种特殊情况需要说明一下：</p>
+<ol>
+<li>对于<code>A ab = new B()</code>这种情况，因为<code>ab.getClass()</code>的类型为<code>B</code>所以<code>ab instanceof A</code>和<code>ab instanceof B</code>都为<code>true</code></li>
+<li><p>当obj为<code>null</code>时，总是返回<code>false</code>。</p>
+<p><code>isInstance</code>的使用方法为<code>class.isInstance(obj)</code>,如果<code>class obj1 = obj</code>成立的话返回true，否则返回false。上述两种特殊情况仍然适用于<code>isInstance</code>。</p>
+</li>
+</ol>
+<p><code>isAssignableFrom</code>的使用方法为<code>classA.isAssignableFrom(classB)</code>, 如果B是A的子类，则返回true，否则返回false。 注意，这里<code>classA</code>和<code>classB</code>都不能为null，否则会抛出异常。</p>
+
+    
+  </div>
+  <footer>
+    
+      
+      
+    
+  </footer>
+</article>
+
+
+</div>
+  </div>
+  <footer id="footer"><div class="footer-mask"></div>
+<div class="copyright">
+  &copy; 2017
+  
+    <a href="/">Dorothy Zhang</a>
+  
+  <div class="heartbeat"></div><div class="heartbeat"></div>
+  <div class="heartbeat float"></div>
+</div>
+<script>
+  // heartbeart forcetouch
+  var heartEl1 = document.querySelector('.heartbeat:first-of-type')
+  var heartEl2 = document.querySelector('.heartbeat:nth-child(3)')
+  var heartFloat = document.querySelector('.heartbeat.float')
+
+  function prepareForForceClick(event) {
+    event.preventDefault();
+  }
+
+  function enterForceClick(event) {
+  }
+
+  function endForceClick(event) {
+    heartFloat.style.transform = 'scale(0)';
+  }
+
+  function forceChanged(event) {
+    heartFloat.style.transform = 'scale(' + 8*event.webkitForce + ')';
+  }
+
+  function setupForceClickBehavior(someElement)
+  {
+    someElement.addEventListener("webkitmouseforcewillbegin", prepareForForceClick, false);
+    someElement.addEventListener("webkitmouseforcedown", enterForceClick, false);
+    someElement.addEventListener("webkitmouseforceup", endForceClick, false);
+    someElement.addEventListener("webkitmouseforcechanged", forceChanged, false);
+  }
+
+  setupForceClickBehavior(heartEl1);
+  setupForceClickBehavior(heartEl2);
+
+  heartFloat.addEventListener('click', function(){
+    heartFloat.style.transform = 'scale(0)'
+  }, false)
+</script>
+</footer>
+  <script src="//cdn.bootcss.com/jquery/2.2.1/jquery.min.js"></script>
+<script src="/js/scale.fix.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+  (function($){
+    $('.fancybox').fancybox();
+  })(jQuery);
+</script>
+
+
+  <div class="footer-mask"></div>
+</body>
+</html>
