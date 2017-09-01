@@ -1,0 +1,154 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  
+  <title>about | DOROTHY</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  
+    <meta name="author" content="Dorothy Zhang">
+  
+  
+    <meta name="description" content="Hi, 我叫张迪，这是我的个人博客，目前主要记录一些技术方面的读书笔记和项目中遇到的技术问题。如果您对我的文章感兴趣可以通过以下方法联系到我：dorothy00dd@gmail.com
+ps: 博主目前正在找工作，等工作确定了会慢慢更新一些手工编织方面的文章，如过你也对编织感兴趣，欢迎联系哟～">
+  
+  <meta name="description" content="Hi, 我叫张迪，这是我的个人博客，目前主要记录一些技术方面的读书笔记和项目中遇到的技术问题。如果您对我的文章感兴趣可以通过以下方法联系到我：dorothy00dd@gmail.com
+ps: 博主目前正在找工作，等工作确定了会慢慢更新一些手工编织方面的文章，如过你也对编织感兴趣，欢迎联系哟～">
+<meta property="og:type" content="website">
+<meta property="og:title" content="about">
+<meta property="og:url" content="http://yoursite.com/about/index.html">
+<meta property="og:site_name" content="DOROTHY">
+<meta property="og:description" content="Hi, 我叫张迪，这是我的个人博客，目前主要记录一些技术方面的读书笔记和项目中遇到的技术问题。如果您对我的文章感兴趣可以通过以下方法联系到我：dorothy00dd@gmail.com
+ps: 博主目前正在找工作，等工作确定了会慢慢更新一些手工编织方面的文章，如过你也对编织感兴趣，欢迎联系哟～">
+<meta property="og:updated_time" content="2017-09-01T06:15:03.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="about">
+<meta name="twitter:description" content="Hi, 我叫张迪，这是我的个人博客，目前主要记录一些技术方面的读书笔记和项目中遇到的技术问题。如果您对我的文章感兴趣可以通过以下方法联系到我：dorothy00dd@gmail.com
+ps: 博主目前正在找工作，等工作确定了会慢慢更新一些手工编织方面的文章，如过你也对编织感兴趣，欢迎联系哟～">
+  
+  
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+</head>
+
+<body>
+  <header id="header">
+  <div class="title-wrapper">
+    <div class="title">
+      <h1><a href="/">DOROTHY</a></h1>
+      <p><a href="/"></a></p>
+    </div>
+  </div>
+</header>
+<nav class="nav">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+      <li><a href="/about">About</a></li>
+    
+    
+  </ul>
+</nav>
+
+  <div class="wrapper">
+    <div class="content"><article class="page">
+  <header>
+    
+  
+    <h1 class="title">about</h1>
+  
+
+    
+  </header>
+  
+  <div class="entry">
+    
+      <p>Hi, 我叫张迪，这是我的个人博客，目前主要记录一些技术方面的读书笔记和项目<br>中遇到的技术问题。如果您对我的文章感兴趣可以通过以下方法联系到我：<br>dorothy00dd@gmail.com</p>
+<p>ps: 博主目前正在找工作，等工作确定了会慢慢更新一些手工编织方面的文章，如<br>过你也对编织感兴趣，欢迎联系哟～</p>
+
+    
+  </div>
+  <footer>
+    
+      
+      
+    
+  </footer>
+</article>
+
+
+</div>
+  </div>
+  <footer id="footer"><div class="footer-mask"></div>
+<div class="copyright">
+  &copy; 2017
+  
+    <a href="/">Dorothy Zhang</a>
+  
+  <div class="heartbeat"></div><div class="heartbeat"></div>
+  <div class="heartbeat float"></div>
+</div>
+<script>
+  // heartbeart forcetouch
+  var heartEl1 = document.querySelector('.heartbeat:first-of-type')
+  var heartEl2 = document.querySelector('.heartbeat:nth-child(3)')
+  var heartFloat = document.querySelector('.heartbeat.float')
+
+  function prepareForForceClick(event) {
+    event.preventDefault();
+  }
+
+  function enterForceClick(event) {
+  }
+
+  function endForceClick(event) {
+    heartFloat.style.transform = 'scale(0)';
+  }
+
+  function forceChanged(event) {
+    heartFloat.style.transform = 'scale(' + 8*event.webkitForce + ')';
+  }
+
+  function setupForceClickBehavior(someElement)
+  {
+    someElement.addEventListener("webkitmouseforcewillbegin", prepareForForceClick, false);
+    someElement.addEventListener("webkitmouseforcedown", enterForceClick, false);
+    someElement.addEventListener("webkitmouseforceup", endForceClick, false);
+    someElement.addEventListener("webkitmouseforcechanged", forceChanged, false);
+  }
+
+  setupForceClickBehavior(heartEl1);
+  setupForceClickBehavior(heartEl2);
+
+  heartFloat.addEventListener('click', function(){
+    heartFloat.style.transform = 'scale(0)'
+  }, false)
+</script>
+</footer>
+  <script src="//cdn.bootcss.com/jquery/2.2.1/jquery.min.js"></script>
+<script src="/js/scale.fix.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+  (function($){
+    $('.fancybox').fancybox();
+  })(jQuery);
+</script>
+
+
+  <div class="footer-mask"></div>
+</body>
+</html>
