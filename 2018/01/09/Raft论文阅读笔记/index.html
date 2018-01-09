@@ -30,7 +30,7 @@ Leader 选举：Leader宕机之后会选出新的Leader
 Leader 选举：Leader宕机之后会选出新的Leader
 日志复制：Leader必须从客户端接收日志，然后将日志复制到其他服务器，并强迫其他服务器上的日志与自己一致。
 安全性：Raft中最主要的安全特性是 State Machine Safety Property：如果一个服务器已经将给定索引位置的日志条目应用到">
-<meta property="og:updated_time" content="2018-01-09T12:36:52.697Z">
+<meta property="og:updated_time" content="2018-01-09T12:38:15.218Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Raft论文阅读笔记">
 <meta name="twitter:description" content="5 Raft一致性算法Raft将一致性问题分成三个相对独立的字问题，分别是：
@@ -92,9 +92,9 @@ Leader 选举：Leader宕机之后会选出新的Leader
 <ol>
 <li>Leader 选举：Leader宕机之后会选出新的Leader</li>
 <li>日志复制：Leader必须从客户端接收日志，然后将日志复制到其他服务器，并强迫其他服务器上的日志与自己一致。</li>
-<li>安全性：Raft中最主要的安全特性是 State Machine Safety Property：如果一个服务器已经将给定索引位置的日志条目应用到状态机，则所有其他服务器不会在该索引位置应用不同的条目。</li>
+<li>安全性：Raft中最主要的安全特性是 State Machine Safety Property：如果一个服务器已经将给定索引位置的日志条目应用到状态机，则所有其他服s务器不会在该索引位置应用不同的条目。<a id="more"></a>
+</li>
 </ol>
-<a id="more"></a>
 <p>论文中的图3介绍了Raft中需要时刻维持的特征，分别为：</p>
 <ol>
 <li>Election Safety：在一个给定的term中，最多只能选出一个leader。原文用了at most一词，说明在一个term，存在没有term被选出来的情况。（可以见论文图5的描述）</li>

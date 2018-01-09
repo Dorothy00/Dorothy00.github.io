@@ -79,8 +79,7 @@
 <ol>
 <li>Leader 选举：Leader宕机之后会选出新的Leader</li>
 <li>日志复制：Leader必须从客户端接收日志，然后将日志复制到其他服务器，并强迫其他服务器上的日志与自己一致。</li>
-<li>安全性：Raft中最主要的安全特性是 State Machine Safety Property：如果一个服务器已经将给定索引位置的日志条目应用到状态机，则所有其他服务器不会在该索引位置应用不同的条目。</li>
-</ol>
+<li>安全性：Raft中最主要的安全特性是 State Machine Safety Property：如果一个服务器已经将给定索引位置的日志条目应用到状态机，则所有其他服s务器不会在该索引位置应用不同的条目。
     
   </div>
   <footer class="end-sep">
