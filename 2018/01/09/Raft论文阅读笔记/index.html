@@ -10,13 +10,13 @@
     <meta name="author" content="Dorothy Zhang">
   
   
-    <meta name="description" content="5.Raft一致性算法Raft将一致性问题分成三个相对独立的字问题，分别是：
+    <meta name="description" content="5 Raft一致性算法Raft将一致性问题分成三个相对独立的字问题，分别是：
 
 Leader 选举：Leader宕机之后会选出新的Leader
 日志复制：Leader必须从客户端接收日志，然后将日志复制到其他服务器，并强迫其他服务器上的日志与自己一致。
 安全性：Raft中最主要的安全特性是 State Machine Safety Property：如果一个服务器已经将给定索引位置的日志条目应用到">
   
-  <meta name="description" content="5.Raft一致性算法Raft将一致性问题分成三个相对独立的字问题，分别是：
+  <meta name="description" content="5 Raft一致性算法Raft将一致性问题分成三个相对独立的字问题，分别是：
 
 Leader 选举：Leader宕机之后会选出新的Leader
 日志复制：Leader必须从客户端接收日志，然后将日志复制到其他服务器，并强迫其他服务器上的日志与自己一致。
@@ -25,15 +25,15 @@ Leader 选举：Leader宕机之后会选出新的Leader
 <meta property="og:title" content="Raft论文阅读笔记">
 <meta property="og:url" content="http://yoursite.com/2018/01/09/Raft论文阅读笔记/index.html">
 <meta property="og:site_name" content="DOROTHY">
-<meta property="og:description" content="5.Raft一致性算法Raft将一致性问题分成三个相对独立的字问题，分别是：
+<meta property="og:description" content="5 Raft一致性算法Raft将一致性问题分成三个相对独立的字问题，分别是：
 
 Leader 选举：Leader宕机之后会选出新的Leader
 日志复制：Leader必须从客户端接收日志，然后将日志复制到其他服务器，并强迫其他服务器上的日志与自己一致。
 安全性：Raft中最主要的安全特性是 State Machine Safety Property：如果一个服务器已经将给定索引位置的日志条目应用到">
-<meta property="og:updated_time" content="2018-01-09T12:34:40.049Z">
+<meta property="og:updated_time" content="2018-01-09T12:36:52.697Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Raft论文阅读笔记">
-<meta name="twitter:description" content="5.Raft一致性算法Raft将一致性问题分成三个相对独立的字问题，分别是：
+<meta name="twitter:description" content="5 Raft一致性算法Raft将一致性问题分成三个相对独立的字问题，分别是：
 
 Leader 选举：Leader宕机之后会选出新的Leader
 日志复制：Leader必须从客户端接收日志，然后将日志复制到其他服务器，并强迫其他服务器上的日志与自己一致。
@@ -88,7 +88,7 @@ Leader 选举：Leader宕机之后会选出新的Leader
   
   <div class="entry">
     
-      <h3 id="5-Raft一致性算法">5.Raft一致性算法</h3><p>Raft将一致性问题分成三个相对独立的字问题，分别是：</p>
+      <h3 id="5_Raft一致性算法">5 Raft一致性算法</h3><p>Raft将一致性问题分成三个相对独立的字问题，分别是：</p>
 <ol>
 <li>Leader 选举：Leader宕机之后会选出新的Leader</li>
 <li>日志复制：Leader必须从客户端接收日志，然后将日志复制到其他服务器，并强迫其他服务器上的日志与自己一致。</li>
@@ -111,8 +111,7 @@ Leader 选举：Leader宕机之后会选出新的Leader
 <li>每一个server都会保存当前term序号，并且随着时间增长。如果一个server的term序号小于其他term，那么他会更新自己的term到更大的值。如果<em>candidate或着leader</em>发现自己的term已经过时了，那么他会立即将自己转化为follower状态。如果Server接收到了一个包含过期term的请求，他会拒绝这个请求。</li>
 <li>Raft中包含三种远程调用，分别为：RequestVote RPC、AppendEntries RPC和Snaptshot RPC。</li>
 </ol>
-<p>5.2 Leader选举</p>
-<ol>
+<h4 id="5-2_Leader选举">5.2 Leader选举</h4><ol>
 <li><p>Raft使用心跳机制来触发leader选举。leader周期性的发送心跳包到follower以证明自己的存在。follower如果在一段时间（这段时间称为election timeout）内没有收到leader发送的心跳包，那么他就认为leader出现了故障，于是将自己转为candidate状态，并增加自己的term，开始新的选举。</p>
 </li>
 <li><p>当以下三件事情发生时candidate会改变自己的状态：</p>
@@ -123,8 +122,7 @@ Leader 选举：Leader宕机之后会选出新的Leader
 <li><p>Raft使用randomized election timeout来避免split vote。</p>
 </li>
 </ol>
-<p>5.3 日志复制</p>
-<ol>
+<h4 id="5-3_日志复制">5.3 日志复制</h4><ol>
 <li><p>如果follower运行缓慢、crash、因为网络问题发生丢包，leader会无限次的尝试重新发送AppendEntries，直到所有的follower最终都存储了所有的日志。</p>
 </li>
 <li><p>被leader应用到状态机上的日志称为committed了的，Raft保证被committed了的日志是持久的，最终一定会被状态机执行。当一个日志已经复制到集群中绝大多数机器上，这个日志就具备了被committed的条件。</p>
@@ -141,8 +139,7 @@ Leader 选举：Leader宕机之后会选出新的Leader
 <li><p>follower可能存在缺失log entry、不一致的log entry、多出的log entry。这些现象造成了leader和follower日志不一致的情况。leader为了使follower的日志和自己同步会为每个follower维护一个nextindex，它表明leader下一个将会发送给follower的log entry的index。当一个leader刚刚被选出时，它把所有nextindex都初始化为自己最大index+1。如果follower的日志和自己不同步，那么一致性检查就会失败。当AppendEntries被拒绝后，leader会减小nextindex值，并重新尝试，直到自己的日志和follower同步为止。此时follower会remove所有有冲突的日志，并将leader发送过来的日志append到末尾。</p>
 </li>
 </ol>
-<p>5.4 安全性</p>
-<p>5.4.1 选举约束</p>
+<h4 id="5-4_安全性">5.4 安全性</h4><p>5.4.1 选举约束</p>
 <ol>
 <li>Raft保证前一个term内所有已经被commit的entries也会保存在新的leader中。log entries只有一个方向的流向：只能从leader到follower，leader决不会删除日志中已经存在的entries。</li>
 <li>Raft通过选举约束来保证被选出的leader包含所有committed entries：leader要赢得选举必须获得大多数server的投票，只有当自己的log比其他candidate更加“up-to-date”时，其他candidate才会投票给他，否则拒绝投票。</li>
@@ -152,13 +149,11 @@ Leader 选举：Leader宕机之后会选出新的Leader
 <p>这节通过图示展示了一个corner case，就是说之前term内已被复制到大多数机器上的日志会被覆盖（没有提交）。作者说解决办法是约束leader只能提交当前term内的日志。但是我还是没有搞明白，图8c中s1并没有提交term为2的日志，只是这个日志被复制到大多数机器上了，然后出现d中的情况。上面的约束并不能解决这个问题呀？找了网上关于Raft的资料，大部分是直白翻译，小部分作了解释，但是感觉也不对。知道的同学看了我博客可否发邮件告知我一下？<em>dorothy00dd@gmail.com</em></p>
 <p>5.4.3 安全性论证</p>
 <p>略。</p>
-<p>5.5 follower和candidate宕机</p>
-<p> follower和candidate宕机将会导致RequestVote和AppendEntries RPC请求失败，Raft通过无限次的重发请求来处理这种事故。如果server重新启动了，那么它将正常收到请求。如果server在收到请求后crash，此时还没来得及回复，等到它重新启动时，会收到相同的请求，此时server会直接忽略。</p>
+<h4 id="5-5_follower和candidate宕机">5.5 follower和candidate宕机</h4><p> follower和candidate宕机将会导致RequestVote和AppendEntries RPC请求失败，Raft通过无限次的重发请求来处理这种事故。如果server重新启动了，那么它将正常收到请求。如果server在收到请求后crash，此时还没来得及回复，等到它重新启动时，会收到相同的请求，此时server会直接忽略。</p>
 <p>5.6 Timing和availabilty</p>
 <p>系统满足下列时间要求时，将能够选出和维持一个稳定的leader：</p>
 <p>broadcastTime &lt;&lt; electionTimeout &lt;&lt; MTBF（平均故障时间）</p>
-<p>6 集群成员变化</p>
-<ol>
+<h3 id="6_集群成员变化">6 集群成员变化</h3><ol>
 <li><p>Raft使用两阶段方法保证迁移的安全，第一步首先将集群转换为一个过渡状态称为“joint consensus”，然后再由这个过渡状态转换为新的配置。</p>
 </li>
 <li><p>具体转换过程如下：</p>
@@ -175,16 +170,14 @@ Leader 选举：Leader宕机之后会选出新的Leader
 <li><p>被去除掉的server可能会干扰系统的运行：这些server将不会再收到心跳信息，因而会发起选举。超时之后继续发起选举，如此循环，导致系统一直不间断处于选举状态。为了解决这一问题，Raft规定server在收到leader心跳信息的一段时间内不会对选举请求发起回应（即不认为leader已经crash了）。</p>
 </li>
 </ol>
-<p>7 日志压缩</p>
-<ol>
+<h3 id="7_日志压缩">7 日志压缩</h3><ol>
 <li>日志如果不进行压缩就会占据太多磁盘空间，还会导致server在重启时花费太多时间replay。</li>
 <li>Raft使用snapshot技术进行日志压缩。</li>
 <li>每个server可以独立的进行snapshot，leader也会发送包含snapshot的日志给server。</li>
 <li>snaptshot包含了<em>last include index</em>,<em>last include term</em>和<em>state machine state</em> 。</li>
 <li>leader使用InstallSnapshot RPC发送snapshot给followers。如果snapshot中包含的内容与follower，follower将会抛弃该snaptshot，反之接受该snapshot，并删除之前的日志。</li>
 </ol>
-<p>8 客户端交互</p>
-<ol>
+<h3 id="8_客户端交互">8 客户端交互</h3><ol>
 <li>客户端会直接发送请求给leader，如果一个客户端刚刚启动，它不知道集群汇总谁是leader，那么他会随机选一个server发送请求，被选中的server会拒绝该请求，并返回它所知的最近的leader。</li>
 <li>leader可能会执行一个指令多次：如果一个leader在给客户端回应之前crash了，但是它已经将日志commit了。客户端由于没有收到回应，会再次发送请求给新的leader，这就导致同一指令北重复执行多次。为了解决这一问题，客户端在每次发送请求前都会加上一个序列号，当leader收到相同序列号的指令时，leader立即回应，但不会执行该指令。</li>
 <li>leader可能会返回一个过时的数据，为了解决该问题每个leader在自己开始当选时都会提交一个no-op entry到日志中，这样他就知道日志中哪些entry被提交了。另外在回应客户端之前leader必须与follower通信，以确定自己没有被deposed。</li>
