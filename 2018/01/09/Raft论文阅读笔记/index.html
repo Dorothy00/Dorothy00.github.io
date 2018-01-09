@@ -10,38 +10,34 @@
     <meta name="author" content="Dorothy Zhang">
   
   
-    <meta name="description" content="###5.Raft一致性算法
-Raft将一致性问题分成三个相对独立的字问题，分别是：
+    <meta name="description" content="5.Raft一致性算法Raft将一致性问题分成三个相对独立的字问题，分别是：
 
 Leader 选举：Leader宕机之后会选出新的Leader
 日志复制：Leader必须从客户端接收日志，然后将日志复制到其他服务器，并强迫其他服务器上的日志与自己一致。
-安全性：Raft中最主要的安全特性是 State Machine Safety Property：如果一个服务器已经将给定索引位置的日志条">
+安全性：Raft中最主要的安全特性是 State Machine Safety Property：如果一个服务器已经将给定索引位置的日志条目应用到">
   
-  <meta name="description" content="###5.Raft一致性算法
-Raft将一致性问题分成三个相对独立的字问题，分别是：
+  <meta name="description" content="5.Raft一致性算法Raft将一致性问题分成三个相对独立的字问题，分别是：
 
 Leader 选举：Leader宕机之后会选出新的Leader
 日志复制：Leader必须从客户端接收日志，然后将日志复制到其他服务器，并强迫其他服务器上的日志与自己一致。
-安全性：Raft中最主要的安全特性是 State Machine Safety Property：如果一个服务器已经将给定索引位置的日志条">
+安全性：Raft中最主要的安全特性是 State Machine Safety Property：如果一个服务器已经将给定索引位置的日志条目应用到">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Raft论文阅读笔记">
 <meta property="og:url" content="http://yoursite.com/2018/01/09/Raft论文阅读笔记/index.html">
 <meta property="og:site_name" content="DOROTHY">
-<meta property="og:description" content="###5.Raft一致性算法
-Raft将一致性问题分成三个相对独立的字问题，分别是：
+<meta property="og:description" content="5.Raft一致性算法Raft将一致性问题分成三个相对独立的字问题，分别是：
 
 Leader 选举：Leader宕机之后会选出新的Leader
 日志复制：Leader必须从客户端接收日志，然后将日志复制到其他服务器，并强迫其他服务器上的日志与自己一致。
-安全性：Raft中最主要的安全特性是 State Machine Safety Property：如果一个服务器已经将给定索引位置的日志条">
-<meta property="og:updated_time" content="2018-01-09T12:33:08.410Z">
+安全性：Raft中最主要的安全特性是 State Machine Safety Property：如果一个服务器已经将给定索引位置的日志条目应用到">
+<meta property="og:updated_time" content="2018-01-09T12:34:40.049Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Raft论文阅读笔记">
-<meta name="twitter:description" content="###5.Raft一致性算法
-Raft将一致性问题分成三个相对独立的字问题，分别是：
+<meta name="twitter:description" content="5.Raft一致性算法Raft将一致性问题分成三个相对独立的字问题，分别是：
 
 Leader 选举：Leader宕机之后会选出新的Leader
 日志复制：Leader必须从客户端接收日志，然后将日志复制到其他服务器，并强迫其他服务器上的日志与自己一致。
-安全性：Raft中最主要的安全特性是 State Machine Safety Property：如果一个服务器已经将给定索引位置的日志条">
+安全性：Raft中最主要的安全特性是 State Machine Safety Property：如果一个服务器已经将给定索引位置的日志条目应用到">
   
   
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -92,8 +88,7 @@ Leader 选举：Leader宕机之后会选出新的Leader
   
   <div class="entry">
     
-      <p>###5.Raft一致性算法</p>
-<p>Raft将一致性问题分成三个相对独立的字问题，分别是：</p>
+      <h3 id="5-Raft一致性算法">5.Raft一致性算法</h3><p>Raft将一致性问题分成三个相对独立的字问题，分别是：</p>
 <ol>
 <li>Leader 选举：Leader宕机之后会选出新的Leader</li>
 <li>日志复制：Leader必须从客户端接收日志，然后将日志复制到其他服务器，并强迫其他服务器上的日志与自己一致。</li>
