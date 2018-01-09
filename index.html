@@ -61,6 +61,50 @@
   <header>
     
   
+    <h1 class="title"><a href="/2018/01/09/Raft论文阅读笔记/"></a></h1>
+  
+
+    
+      <a href="/2018/01/09/Raft论文阅读笔记/">
+  <time datetime="2018-01-09T12:21:46.031Z">
+    2018-01-09
+  </time>
+</a>
+    
+  </header>
+  
+  <div class="entry">
+    
+      <p>## </p>
+<p>title: Raft论文阅读笔记<br>date: 2018-1-9 20:21:11<br>categories: 技术</p>
+<h2 id="tags:_论文笔记">tags: 论文笔记</h2><p>###5.Raft一致性算法</p>
+<p>Raft将一致性问题分成三个相对独立的字问题，分别是：</p>
+<ol>
+<li>Leader 选举：Leader宕机之后会选出新的Leader</li>
+<li>日志复制：Leader必须从客户端接收日志，然后将日志复制到其他服务器，并强迫其他服务器上的日志与自己一致。</li>
+<li>安全性：Raft中最主要的安全特性是 State Machine Safety Property：如果一个服务器已经将给定索引位置的日志条目应用到状态机，则所有其他服务器不会在该索引位置应用不同的条目。</li>
+</ol>
+    
+  </div>
+  <footer class="end-sep">
+    
+      
+        <div class="alignleft">
+          <a href="/2018/01/09/Raft论文阅读笔记/#more" class="more-link">阅读全文</a>
+        </div>
+      
+      
+    
+  </footer>
+</article>
+
+
+
+  
+    <article class="post">
+  <header>
+    
+  
     <h1 class="title"><a href="/2017/12/19/2017年终总结/">2017年终总结</a></h1>
   
 
@@ -396,43 +440,6 @@
 
 
   
-    <article class="post">
-  <header>
-    
-  
-    <h1 class="title"><a href="/2016/02/22/sigpending/">APUE 读书笔记之程序清单10-11中sigpending函数返回值异常的理解</a></h1>
-  
-
-    
-      <a href="/2016/02/22/sigpending/">
-  <time datetime="2016-02-22T15:22:20.000Z">
-    2016-02-22
-  </time>
-</a>
-    
-  </header>
-  
-  <div class="entry">
-    
-      <p>首先附上程序清单10-11:</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="preprocessor">#<span class="keyword">include</span> <span class="string">"apue"</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span><br><span class="line"></span>&#123;</span><br><span class="line">    <span class="keyword">sigset_t</span> newmask, oldmask, pendmask;</span><br><span class="line">    <span class="keyword">sigset_t</span> before, after;</span><br><span class="line">    <span class="keyword">if</span>(signal(SIGQUIT, sig_quit) == SIG_ERR)</span><br><span class="line">        err_sys(<span class="string">"can't catch SIGQUIT\n"</span>);</span><br><span class="line"></span><br><span class="line">    sigemptyset(&amp;newmask);</span><br><span class="line">    sigaddset(&amp;newmask, SIGQUIT);</span><br><span class="line">    <span class="keyword">if</span>(sigprocmask(SIG_BLOCK, &amp;newmask, &amp;oldmask) &lt; <span class="number">0</span>)</span><br><span class="line">        err_sys(<span class="string">"SIG_BLOCK err"</span>);</span><br><span class="line">    sleep(<span class="number">5</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>(sigpending(&amp;pendmask) &lt; <span class="number">0</span>)</span><br><span class="line">        err_sys(<span class="string">"sigpendding err"</span>);</span><br><span class="line">    <span class="keyword">if</span>(sigismember(&amp;pendmask, SIGQUIT))</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"\nSIGQUIT pendding\n"</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>(sigprocmask(SIG_SETMASK, &amp;oldmask, <span class="literal">NULL</span>) &lt; <span class="number">0</span>)</span><br><span class="line">        err_sys(<span class="string">"SIG_MASK err"</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"SIGQUIT unblocked\n"</span>);</span><br><span class="line">    sleep(<span class="number">5</span>);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">exit</span>(<span class="number">0</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-    
-  </div>
-  <footer class="end-sep">
-    
-      
-        <div class="alignleft">
-          <a href="/2016/02/22/sigpending/#more" class="more-link">阅读全文</a>
-        </div>
-      
-      
-    
-  </footer>
-</article>
-
-
-
-  
 
   <nav id="pagination">
   
@@ -446,7 +453,7 @@
   </div>
   <footer id="footer"><div class="footer-mask"></div>
 <div class="copyright">
-  &copy; 2017
+  &copy; 2018
   
     <a href="/">Dorothy Zhang</a>
   
