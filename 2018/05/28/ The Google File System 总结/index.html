@@ -4,21 +4,36 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="chrome=1">
   
-  <title>DOROTHY</title>
+  <title>分布式理论基础学习（二）： The Google File System 总结 | DOROTHY</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   
     <meta name="author" content="Dorothy Zhang">
   
   
-  <meta name="description">
-<meta property="og:type" content="website">
-<meta property="og:title" content="DOROTHY">
-<meta property="og:url" content="http://yoursite.com/index.html">
+    <meta name="description" content="设计需求与假设随着Google日益增长的数据处理需求，传统的分布式文件系统在性能、可扩展性、可靠性和可获得性上已经不能满足应用需求，于是Google自己设计和实现了GFS。现有的分布式文件系统主要有以下几点需求与假设：
+
+节点失效是正常状态。文件系统中包含成百上千的服务器，每个服务器都可能因为应用bug、操作系统bug、人为因素产生的错误、磁盘、内存、连接和网络等原因发生故障。
+系统中有很多的大文">
+  
+  <meta name="description" content="设计需求与假设随着Google日益增长的数据处理需求，传统的分布式文件系统在性能、可扩展性、可靠性和可获得性上已经不能满足应用需求，于是Google自己设计和实现了GFS。现有的分布式文件系统主要有以下几点需求与假设：
+
+节点失效是正常状态。文件系统中包含成百上千的服务器，每个服务器都可能因为应用bug、操作系统bug、人为因素产生的错误、磁盘、内存、连接和网络等原因发生故障。
+系统中有很多的大文">
+<meta property="og:type" content="article">
+<meta property="og:title" content="分布式理论基础学习（二）： The Google File System 总结">
+<meta property="og:url" content="http://yoursite.com/2018/05/28/ The Google File System 总结/index.html">
 <meta property="og:site_name" content="DOROTHY">
-<meta property="og:description">
+<meta property="og:description" content="设计需求与假设随着Google日益增长的数据处理需求，传统的分布式文件系统在性能、可扩展性、可靠性和可获得性上已经不能满足应用需求，于是Google自己设计和实现了GFS。现有的分布式文件系统主要有以下几点需求与假设：
+
+节点失效是正常状态。文件系统中包含成百上千的服务器，每个服务器都可能因为应用bug、操作系统bug、人为因素产生的错误、磁盘、内存、连接和网络等原因发生故障。
+系统中有很多的大文">
+<meta property="og:updated_time" content="2018-05-28T11:49:02.563Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="DOROTHY">
-<meta name="twitter:description">
+<meta name="twitter:title" content="分布式理论基础学习（二）： The Google File System 总结">
+<meta name="twitter:description" content="设计需求与假设随着Google日益增长的数据处理需求，传统的分布式文件系统在性能、可扩展性、可靠性和可获得性上已经不能满足应用需求，于是Google自己设计和实现了GFS。现有的分布式文件系统主要有以下几点需求与假设：
+
+节点失效是正常状态。文件系统中包含成百上千的服务器，每个服务器都可能因为应用bug、操作系统bug、人为因素产生的错误、磁盘、内存、连接和网络等原因发生故障。
+系统中有很多的大文">
   
   
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -51,17 +66,11 @@
 </nav>
 
   <div class="wrapper">
-    <div class="content">
-
-
-
-
-  
-    <article class="post">
+    <div class="content"><article class="post">
   <header>
     
   
-    <h1 class="title"><a href="/2018/05/28/ The Google File System 总结/">分布式理论基础学习（二）： The Google File System 总结</a></h1>
+    <h1 class="title">分布式理论基础学习（二）： The Google File System 总结</h1>
   
 
     
@@ -208,364 +217,18 @@
 
     
   </div>
-  <footer class="end-sep">
+  <footer>
     
       
-      
-    
-  </footer>
-</article>
-
-
-
-  
-    <article class="post">
-  <header>
-    
-  
-    <h1 class="title"><a href="/2018/05/18/MIT-6.824课程总结/">MIT-6.824课程总结</a></h1>
-  
-
-    
-      <a href="/2018/05/18/MIT-6.824课程总结/">
-  <time datetime="2018-05-18T06:30:01.000Z">
-    2018-05-18
-  </time>
-</a>
-    
-  </header>
-  
-  <div class="entry">
-    
-      <p>  断断续续在写大论文的6个月里终于完成了MIT-6.824的实验部分了(Lab1, Lab2, Lab3, Lab4A)。实验主要是围绕Raft的实现与应用展开。Lab1是实现一个简单的<code>MapReduce</code>系统，应该是4个实验里最简单的一个。Lab2需要实现<code>Raft</code>协议，个人认为是实验里难的一个，完成这个实验后对<code>Raft</code>论文有了一个更直观的认识，知道了它的原理是什么了。然后Lab3和Lab4都是基于<code>Raft</code>协议的应用，通过这两个实验可以知道如何使用<code>Raft</code>以及<code>Raft</code>协议可以用来做什么。虽然自己在做实验的过程比较漫长(穿插了毕业论文，中间有一个bug修了一周才找到原因)，但完成后还是成就感满满，对于<code>Raft</code>协议也有了更深的认识。</p>
-<p>实现过程中也读了课程中的几篇论文，除了<code>Raft</code>和<code>MapReduce</code>有直观的印象外，其他都是云里雾里，不太懂。我想可能是因为我对分布式中用到的技术、原理目前了解都还不太深，后面还有很多东西需要学习。</p>
-<p>实验代码链接：</p>
-<p><a href="https://github.com/ZiyueHuang/Distributed-Systems" target="_blank" rel="external">https://github.com/ZiyueHuang/Distributed-Systems</a></p>
-
-    
+  <div class="categories">
+    <a class="categories-link" href="/categories/分布式理论/">分布式理论</a>
   </div>
-  <footer class="end-sep">
-    
-      
+
       
     
   </footer>
 </article>
 
-
-
-  
-    <article class="post">
-  <header>
-    
-  
-    <h1 class="title"><a href="/2018/01/09/Raft论文阅读笔记/">Raft论文阅读笔记</a></h1>
-  
-
-    
-      <a href="/2018/01/09/Raft论文阅读笔记/">
-  <time datetime="2018-01-09T12:21:11.000Z">
-    2018-01-09
-  </time>
-</a>
-    
-  </header>
-  
-  <div class="entry">
-    
-      <h3 id="5_Raft一致性算法">5 Raft一致性算法</h3><p>Raft将一致性问题分成三个相对独立的字问题，分别是：</p>
-<ol>
-<li>Leader 选举：Leader宕机之后会选出新的Leader</li>
-<li>日志复制：Leader必须从客户端接收日志，然后将日志复制到其他服务器，并强迫其他服务器上的日志与自己一致。</li>
-<li>安全性：Raft中最主要的安全特性是 State Machine Safety Property：如果一个服务器已经将给定索引位置的日志条目应用到状态机，则所有其他服s务器不会在该索引位置应用不同的条目。
-    
-  </div>
-  <footer class="end-sep">
-    
-      
-        <div class="alignleft">
-          <a href="/2018/01/09/Raft论文阅读笔记/#more" class="more-link">阅读全文</a>
-        </div>
-      
-      
-    
-  </footer>
-</article>
-
-
-
-  
-    <article class="post">
-  <header>
-    
-  
-    <h1 class="title"><a href="/2017/12/19/2017年终总结/">2017年终总结</a></h1>
-  
-
-    
-      <a href="/2017/12/19/2017年终总结/">
-  <time datetime="2017-12-19T12:54:11.000Z">
-    2017-12-19
-  </time>
-</a>
-    
-  </header>
-  
-  <div class="entry">
-    
-      <p>距离2018还有10天，是时候来一波年终总结了。<br>
-    
-  </div>
-  <footer class="end-sep">
-    
-      
-        <div class="alignleft">
-          <a href="/2017/12/19/2017年终总结/#more" class="more-link">阅读全文</a>
-        </div>
-      
-      
-    
-  </footer>
-</article>
-
-
-
-  
-    <article class="post">
-  <header>
-    
-  
-    <h1 class="title"><a href="/2017/07/31/Android事件分发过程源码分析/">Android事件分发过程源码分析</a></h1>
-  
-
-    
-      <a href="/2017/07/31/Android事件分发过程源码分析/">
-  <time datetime="2017-07-31T09:04:18.000Z">
-    2017-07-31
-  </time>
-</a>
-    
-  </header>
-  
-  <div class="entry">
-    
-      <blockquote>
-<p>  前言：一直以来对Android事件分发过程都是似懂非懂，知道<code>dispatchtouchEvent</code>是处理事件分发的函数，<code>onInterceptTouchEvent</code>是处理事件拦截的函数，<code>onTouchEvent</code>是消耗事件的函数，但具体的事件流程还是比较模糊。由于最近笔者在准备秋招面试，而Android事件分发过程又是高频题，所以下决心弄懂这个过程，因而有了这篇博文。本文会以笔者在打Log时遇到的问题为出发点，通过一步步阅读源码，最终解决问题，来理清Android中的事件分发过程。</p>
-</blockquote>
-    
-  </div>
-  <footer class="end-sep">
-    
-      
-        <div class="alignleft">
-          <a href="/2017/07/31/Android事件分发过程源码分析/#more" class="more-link">阅读全文</a>
-        </div>
-      
-      
-    
-  </footer>
-</article>
-
-
-
-  
-    <article class="post">
-  <header>
-    
-  
-    <h1 class="title"><a href="/2017/07/02/Java中的instanceof、isInstance、isAssignableFrom用法/">Java中的instanceof、isInstance、isAssignableFrom用法</a></h1>
-  
-
-    
-      <a href="/2017/07/02/Java中的instanceof、isInstance、isAssignableFrom用法/">
-  <time datetime="2017-07-02T13:00:00.000Z">
-    2017-07-02
-  </time>
-</a>
-    
-  </header>
-  
-  <div class="entry">
-    
-      <p>先上测试代码：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TestInstance</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">		A a = <span class="keyword">new</span> A();</span><br><span class="line">		B b = <span class="keyword">new</span> B();</span><br><span class="line">		A ab = <span class="keyword">new</span> B();</span><br><span class="line"></span><br><span class="line">		System.out.println(a <span class="keyword">instanceof</span> A);  <span class="comment">// true</span></span><br><span class="line">		System.out.println(b <span class="keyword">instanceof</span> A);  <span class="comment">// true</span></span><br><span class="line">		System.out.println(a <span class="keyword">instanceof</span> B);  <span class="comment">// false</span></span><br><span class="line">		System.out.println(ab <span class="keyword">instanceof</span> A); <span class="comment">// true</span></span><br><span class="line">		System.out.println(ab <span class="keyword">instanceof</span> B); <span class="comment">// true</span></span><br><span class="line">		System.out.println(<span class="keyword">null</span> <span class="keyword">instanceof</span> A); <span class="comment">// false</span></span><br><span class="line"></span><br><span class="line">		System.out.println(A.class.isInstance(a));  <span class="comment">// true</span></span><br><span class="line">		System.out.println(A.class.isInstance(b));  <span class="comment">// true</span></span><br><span class="line">		System.out.println(B.class.isInstance(a));  <span class="comment">// false</span></span><br><span class="line">		System.out.println(A.class.isInstance(ab)); <span class="comment">// true</span></span><br><span class="line">		System.out.println(B.class.isInstance(ab));  <span class="comment">// true</span></span><br><span class="line">		System.out.println(A.class.isInstance(<span class="keyword">null</span>)); <span class="comment">// false</span></span><br><span class="line"></span><br><span class="line">		System.out.println(A.class.isAssignableFrom(B.class));  <span class="comment">// true</span></span><br><span class="line">		System.out.println(B.class.isAssignableFrom(A.class));  <span class="comment">// false</span></span><br><span class="line"></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span></span>&#123;	</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">B</span> <span class="keyword">extends</span> <span class="title">A</span></span>&#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-    
-  </div>
-  <footer class="end-sep">
-    
-      
-        <div class="alignleft">
-          <a href="/2017/07/02/Java中的instanceof、isInstance、isAssignableFrom用法/#more" class="more-link">阅读全文</a>
-        </div>
-      
-      
-    
-  </footer>
-</article>
-
-
-
-  
-    <article class="post">
-  <header>
-    
-  
-    <h1 class="title"><a href="/2017/03/26/AsyncTask源码分析/">AsyncTask源码分析</a></h1>
-  
-
-    
-      <a href="/2017/03/26/AsyncTask源码分析/">
-  <time datetime="2017-03-26T06:45:34.000Z">
-    2017-03-26
-  </time>
-</a>
-    
-  </header>
-  
-  <div class="entry">
-    
-      <p>网上关于AsyncTask的源码分析已经一大堆了，写此篇博文主要是为自己学习过程留个记录，加深印象。同时也为找实习做准备。<br>AsyncTask的源码还是比较短的，我们首先分析它的组成部分：<br><code>WorkerRunnable&lt;Params, Result&gt; mWorker</code><br><code>FutureTask&lt;Result&gt; mFuture</code><br><code>EExecutor sDefaultExecutor = SERIAL_EXECUTOR</code><br><code>Executor THREAD_POOL_EXECUTOR</code><br><code>InternalHandler</code><br>
-    
-  </div>
-  <footer class="end-sep">
-    
-      
-        <div class="alignleft">
-          <a href="/2017/03/26/AsyncTask源码分析/#more" class="more-link">阅读全文</a>
-        </div>
-      
-      
-    
-  </footer>
-</article>
-
-
-
-  
-    <article class="post">
-  <header>
-    
-  
-    <h1 class="title"><a href="/2016/11/12/iosched源码阅读之ActionBar自动隐藏分析/">iosched源码阅读之ActionBar自动隐藏分析</a></h1>
-  
-
-    
-      <a href="/2016/11/12/iosched源码阅读之ActionBar自动隐藏分析/">
-  <time datetime="2016-11-12T06:41:39.000Z">
-    2016-11-12
-  </time>
-</a>
-    
-  </header>
-  
-  <div class="entry">
-    
-      <p>花了一下午看了一下iosched中ActionBar自动隐藏的机制，和知乎最新版Android客户端自动隐藏和显示的效果基本一致(应该是知乎仿照iosched写的？)。首先看下ActionBar自动隐藏的效果：<br>
-    
-  </div>
-  <footer class="end-sep">
-    
-      
-        <div class="alignleft">
-          <a href="/2016/11/12/iosched源码阅读之ActionBar自动隐藏分析/#more" class="more-link">阅读全文</a>
-        </div>
-      
-      
-    
-  </footer>
-</article>
-
-
-
-  
-    <article class="post">
-  <header>
-    
-  
-    <h1 class="title"><a href="/2016/11/02/Android开发艺术探索读书笔记/">《Android开发艺术探索》读书笔记</a></h1>
-  
-
-    
-      <a href="/2016/11/02/Android开发艺术探索读书笔记/">
-  <time datetime="2016-11-02T03:14:18.000Z">
-    2016-11-02
-  </time>
-</a>
-    
-  </header>
-  
-  <div class="entry">
-    
-      <p>这本书断断续续看了一个多月，因为中间穿插着论文的事情，导致有一段时间没看。</p>
-<p>从14年在扇贝Android实习，到15年本科毕业，再到16年研一结束。中间有1年多没有碰Android了，实习学到的一些知识也有写遗忘。由于研究生跟了一个水导师，科研基本无望，还是决定重拾Android，将来从事Android开发。从上学期到现在，自己大概做了以下几件事：</p>
-<ul>
-<li>看了一遍《TCP/IP协议族》，对计算机网络一些原理、协议有了基本认识</li>
-<li>看了一遍《Java 编程思想》，对Java基础知识提升很有帮助</li>
-<li>自己实现了一个V2EX客户端，目前还有一些bug，打算最近再完善一下</li>
-<li>粗略看了一遍《Android群英传》，个人感觉写的并不是很好</li>
-<li>看了一遍《Android开发艺术探索》，感觉作者写的很用心，对于Android进阶非常有帮助</li>
-</ul>
-    
-  </div>
-  <footer class="end-sep">
-    
-      
-        <div class="alignleft">
-          <a href="/2016/11/02/Android开发艺术探索读书笔记/#more" class="more-link">阅读全文</a>
-        </div>
-      
-      
-    
-  </footer>
-</article>
-
-
-
-  
-    <article class="post">
-  <header>
-    
-  
-    <h1 class="title"><a href="/2016/07/29/java_容器/">Java 容器</a></h1>
-  
-
-    
-      <a href="/2016/07/29/java_容器/">
-  <time datetime="2016-07-29T11:34:20.000Z">
-    2016-07-29
-  </time>
-</a>
-    
-  </header>
-  
-  <div class="entry">
-    
-      <p>本文是《Thinking in Java》11和17章的读书笔记，仅介绍List Set和Map。</p>
-    
-  </div>
-  <footer class="end-sep">
-    
-      
-        <div class="alignleft">
-          <a href="/2016/07/29/java_容器/#more" class="more-link">阅读全文</a>
-        </div>
-      
-      
-    
-  </footer>
-</article>
-
-
-
-  
-
-  <nav id="pagination">
-  
-  
-    <a href="/page/2/" class="next">下一页</a>
-  
-  <div class="clearfix"></div>
-</nav>
 
 </div>
   </div>
