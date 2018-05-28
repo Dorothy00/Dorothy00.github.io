@@ -27,7 +27,12 @@
 
 节点失效是正常状态。文件系统中包含成百上千的服务器，每个服务器都可能因为应用bug、操作系统bug、人为因素产生的错误、磁盘、内存、连接和网络等原因发生故障。
 系统中有很多的大文">
-<meta property="og:updated_time" content="2018-05-28T12:01:16.361Z">
+<meta property="og:image" content="http://7xoxkx.com1.z0.glb.clouddn.com/architecture.png">
+<meta property="og:image" content="http://7xoxkx.com1.z0.glb.clouddn.com/defined.png">
+<meta property="og:image" content="http://7xoxkx.com1.z0.glb.clouddn.com/file%20state.png">
+<meta property="og:image" content="http://7xoxkx.com1.z0.glb.clouddn.com/at%20least%20once.png">
+<meta property="og:image" content="http://7xoxkx.com1.z0.glb.clouddn.com/write%20and%20control%20flow.png">
+<meta property="og:updated_time" content="2018-05-28T12:07:09.505Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="分布式理论基础学习（二）： The Google File System 总结">
 <meta name="twitter:description" content="设计需求与假设随着Google日益增长的数据处理需求，传统的分布式文件系统在性能、可扩展性、可靠性和可获得性上已经不能满足应用需求，于是Google自己设计和实现了GFS。现有的分布式文件系统主要有以下几点需求与假设：
@@ -94,7 +99,7 @@
 <li>高度稳定的带宽比低延迟更加重要。</li>
 </ol>
 <a id="more"></a>
-<h2 id="系统架构">系统架构</h2><p><a href="http://7xoxkx.com1.z0.glb.clouddn.com/architecture.png" target="_blank" rel="external">architecture</a></p>
+<h2 id="系统架构">系统架构</h2><p><img src="http://7xoxkx.com1.z0.glb.clouddn.com/architecture.png" alt="architecture"></p>
 <ol>
 <li>文件被分成固定大小的块(<code>chunk</code>)，每个<code>chunk</code>由一个不可更改的、全局唯一的64字节<code>chunk handle</code>唯一标识。<code>chunk handle</code>由master创建<code>chunk</code>时指定。</li>
 <li>默认情况下每个<code>chunk</code>存在三个副本。应用程序也可更改这一设置。</li>
@@ -133,14 +138,14 @@
 <p>consistent: 一个文件域是<code>consistent</code>的如果所有客户端看到的数据都是相同的，不管他们是从哪个副本中读取的。</p>
 <p>defined: 文件域是<code>defined</code>的前提需要满足<code>consistent</code>条件，并且所有客户端都能看到对该文件修改后的正确结果。</p>
 <p>比如下面的例子：</p>
-<p><a href="http://7xoxkx.com1.z0.glb.clouddn.com/defined.png" target="_blank" rel="external">defined</a></p>
+<p><img src="http://7xoxkx.com1.z0.glb.clouddn.com/defined.png" alt="defined"></p>
 <p>刚开始<code>chunk</code>里的内容是123，所有客户端看到的内容都是123，所以是<code>consistent</code>的。现在要在这个<code>chunk</code>后追加456，但是由于某些原因，只写入了45。虽然所有客户端看到的内容都是12345，但是这个写入操作是不成功的，导致该<code>chunk</code>是<code>undefined</code>的。</p>
 <p>文中对于修改过后的文件域状态作了总结，如下图所示：</p>
-<p><a href="http://7xoxkx.com1.z0.glb.clouddn.com/file%20state.png" target="_blank" rel="external">file state</a></p>
+<p><img src="http://7xoxkx.com1.z0.glb.clouddn.com/file%20state.png" alt="file state"></p>
 <p>首先解释一下<code>write</code>和<code>append record</code>的区别。</p>
 <p><code>write</code>操作将数据写入时的<code>offset</code>是由客户端任意指定的，而<code>append record</code>写入数据时的<code>offerset</code>由GFS指定，并且可以保证该操作是原子性的，同时<strong>至少被写入一次</strong>。</p>
 <p>这里首先解释一下为什么会被<strong>至少写入一次</strong>而不是保证一次：</p>
-<p><a href="http://7xoxkx.com1.z0.glb.clouddn.com/at%20least%20once.png" target="_blank" rel="external">at least once</a></p>
+<p><img src="http://7xoxkx.com1.z0.glb.clouddn.com/at%20least%20once.png" alt="at least once"></p>
 <p>如图所示，客户端追加数据，第一次副本1写入成功，副本2写入失败，客户端重试，第二次副本1和副本2都写入成功。这使得副本1中一个数据被写入了两次。这种情况就是<code>defined interspersed with inconsistent</code>。</p>
 <p>对于concurrent write操作，需要客户端自己去保证操作顺序。</p>
 <p>GFS通过锁定<code>namespace</code>的方式保证操作的原子性和全局的唯一顺序。</p>
@@ -160,7 +165,7 @@
 <p><code>master</code>指定<code>lease</code>的过程如下：</p>
 <p><code>master</code>在<code>chunk</code>副本中指定一个为<code>primary</code>，通常<code>lease</code>时间为60s。<code>primary</code>也可以通过心跳信息来无限期延续时间，只要这个<code>chunk</code>被修改了(<code>原文：as long as the chunk is being mutated, the primary can request and typically receive exten- sions from the master indefinitely。 其实不太不明为什么需要as log as the chunk is being mutated</code>)。<code>master</code>也可以在<code>lease</code>过期前将其收回，比如<code>master</code>想禁止对某个文件的修改(思考：这里回收lease也是通过心跳信息来维护的吗？)。</p>
 <p>下图是一个write操作的具体步骤：</p>
-<p><a href="http://7xoxkx.com1.z0.glb.clouddn.com/write%20and%20control%20flow.png" target="_blank" rel="external">write and control flow</a></p>
+<p><img src="http://7xoxkx.com1.z0.glb.clouddn.com/write%20and%20control%20flow.png" alt="write and control flow"></p>
 <ol>
 <li>客户端向<code>master</code>发起请求，询问<code>master</code>当前<code>chunk</code>的<code>lease</code>信息，以及所有副本的位置。如果当前<code>chunk</code>还没有<code>lease</code>，<code>master</code>会副本中选择一个授予。</li>
 <li><code>master</code>对客户端进行回复。客户端缓存<code>lease</code>信息和副本位置信息。当<code>primary</code>发生故障或者不再持有<code>lease</code>时，客户端会重新请求。</li>
