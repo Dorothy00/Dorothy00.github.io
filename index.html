@@ -84,132 +84,14 @@
 <li>对于多个客户端并发的向同一文件追加数据，系统需要保证语义明确。</li>
 <li>高度稳定的带宽比低延迟更加重要。</li>
 </ol>
-<h2 id="系统架构">系统架构</h2><ol>
-<li>文件被分成固定大小的块(<code>chunk</code>)，每个<code>chunk</code>由一个不可更改的、全局唯一的64字节<code>chunk handle</code>唯一标识。<code>chunk handle</code>由master创建<code>chunk</code>时指定。</li>
-<li>默认情况下每个<code>chunk</code>存在三个副本。应用程序也可更改这一设置。</li>
-<li><code>master</code>负责维护系统中所有元数据<ul>
-<li><code>namespace</code></li>
-<li>访问控制信息</li>
-<li>文件到<code>chunk</code>的map</li>
-<li>系统中<code>chunk</code>的位置</li>
-</ul>
-</li>
-<li><code>master</code>负责控制系统活动<ul>
-<li><code>chunk lease management</code></li>
-<li>回收<code>orphaned chunk</code></li>
-<li><code>chunk</code>迁移</li>
-</ul>
-</li>
-<li>客户端和<code>chunk server</code>都不存储数据</li>
-</ol>
-<h2 id="Chunk_Size">Chunk Size</h2><p>GFS上<code>chunk size</code>的大小是64MB，为了减少内部碎片，GFS使用<code>Lazy space allocation</code>策略来分配空间。</p>
-<blockquote>
-<p>  疑问：这里的<code>Lazy space allocation</code>是指等文件凑够64MB再写入磁盘，还是当文件不足64MB时，按文件的实际大小来写入磁盘？根据后文的说法，我比较倾向于后一种实现。但是后一种实现会导致块大小不一，是不是还需要一些额外的信息？</p>
-</blockquote>
-<p>使用大的<code>chunk size</code>有以下几个优点：</p>
-<ol>
-<li>减少了客户端与<code>master</code>交互的次数。</li>
-<li><code>chunk size</code>较大使得客户端有较大的几率在同一<code>chunk</code>上执行多次操作，从而减少网络负担。</li>
-<li>减少了<code>master</code>上需要存储的元数据数量。</li>
-</ol>
-<p>同时也有一些缺点，如小文件可能只存在于一个<code>chunk</code>中，那么存储这个<code>chunk</code>的<code>chunkservers</code>就有可能成为热点，如果多个客户端同时访问的话。但这通常不会造成问题，因为系统中的文件大部分都分布在多个<code>chunk</code>中。</p>
-<h2 id="Meta_data">Meta data</h2><p>所有的元数据都存储在<code>master</code>的内存中。其中<code>namespace</code>和<code>file to chunk mapping</code>会以<code>operation log</code>的形式存储在<code>master</code>的本地磁盘中，同时备份到其他远程机器上。<code>master</code>启动时或者<code>chunkserver</code>刚刚加入集群时，<code>master</code>会向<code>chunkserver</code>询问他存储了哪些<code>chunk</code>。</p>
-<p>将<code>meta data</code>存储在内存中并不会限制系统的<code>capacity</code>，即<code>master</code>最多可以管理多少<code>chunk</code> 。这是因为每个<code>chunk</code>的<code>meta data</code>是少于64字节的，每个文件的<code>namespace data</code>需要存储的数据也是少于64字节的，因而需要维护的元数据 并不是太多。另外，如果要支持更大的文件系统，追加内存的代价是比较小的。</p>
-<h2 id="Operation_Log">Operation Log</h2><p><code>operation log</code>包含了<code>meta data</code>的变更记录，需要被持久化到本地磁盘。每次更改<code>meta data</code>的操作都要等到<code>operation log</code>持久化之后，<code>master</code>才会对客户端进行响应，否则<code>master</code>发生故障后，无法重新恢复到之前的状态。为了减少持久化对系统吞吐量造成的影响，<code>master</code>会将多个操作打包到一起写入<code>operation log</code> .</p>
-<p>当<code>operation log</code>达到一定大小时，会进行<code>checkpoint</code>操作，<code>checkpoint</code>是将当前状态写入磁盘，那么在<code>checkpoint</code>之后的<code>operation log</code>就可以被删除了。<code>master</code>进行恢复时只需<code>replay</code> <code>checkpoint</code>之后的<code>operation log</code>。<code>checkpoint</code>是一个B-Tree形式的东西，可以直接被映射进内存。// 怎么映射完全不懂，可能和操作系统有关吧。。。</p>
-<p>由于构建<code>checkpoint</code>需要一定的时间，<code>master</code>会在另一个线程中创建新的<code>log file 和 checkpoint</code>，一般可以在1分钟内完成。</p>
-<h2 id="Consistency_Model">Consistency Model</h2><p>两个概念解释：</p>
-<p>consistent: 一个文件域是<code>consistent</code>的如果所有客户端看到的数据都是相同的，不管他们是从哪个副本中读取的。</p>
-<p>defined: 文件域是<code>defined</code>的前提需要满足<code>consistent</code>条件，并且所有客户端都能看到对该文件修改后的正确结果。</p>
-<p>比如下面的例子：</p>
-<p>//插入图片</p>
-<p>刚开始<code>chunk</code>里的内容是123，所有客户端看到的内容都是123，所以是<code>consistent</code>的。现在要在这个<code>chunk</code>后追加456，但是由于某些原因，只写入了45。虽然所有客户端看到的内容都是12345，但是这个写入操作是不成功的，导致该<code>chunk</code>是<code>undefined</code>的。</p>
-<p>文中对于修改过后的文件域状态作了总结，如下图所示：</p>
-<p>//插入图片</p>
-<p>首先解释一下<code>write</code>和<code>append record</code>的区别。</p>
-<p><code>write</code>操作将数据写入时的<code>offset</code>是由客户端任意指定的，而<code>append record</code>写入数据时的<code>offerset</code>由GFS指定，并且可以保证该操作是原子性的，同时<strong>至少被写入一次</strong>。</p>
-<p>这里首先解释一下为什么会被<strong>至少写入一次</strong>而不是保证一次：</p>
-<p>//插入图片</p>
-<p>如图所示，客户端追加数据，第一次副本1写入成功，副本2写入失败，客户端重试，第二次副本1和副本2都写入成功。这使得副本1中一个数据被写入了两次。这种情况就是<code>defined interspersed with inconsistent</code>。</p>
-<p>对于concurrent write操作，需要客户端自己去保证操作顺序。</p>
-<p>GFS通过锁定<code>namespace</code>的方式保证操作的原子性和全局的唯一顺序。</p>
-<p>GFS通过以下两种操作来保证被修改的文件域是<code>defined</code>：</p>
-<ol>
-<li>对于每个副本<code>chunk</code>来说，执行修改操作的顺序是唯一的。</li>
-<li>使用<code>chunk version</code>来监测过时的<code>chunk</code></li>
-</ol>
-<p>由于客户端会缓存<code>chunk</code>的位置信息，那么就有可能在更新前读到一个过时的副本。(个人认为这种情况是存在的，后文的描述可能为了说明这种情况发生的概率比较小，而且一旦发生，影响也不会很大)。为了减少这种情况发生，一方面缓存过期时间和下一次文件被打开时间之间的间隔比较小；另一方面文件一旦再次被打开，客户端就会将该文件相关的<code>chunk</code>缓存信息清除掉。</p>
-<blockquote>
-<p>  原文再次打开就清缓存的原话是：the next open of the file, which purges from the cache all chunk information for that file。刚开始我对这句话的理解是重新读取chunk时就会清缓存，这样缓存chunk的位置信息就没有任何意义了。仔细看是再次打开文件时进行清理，那么在一个TCP连接里的多次请求都是可以使用缓存的。                        </p>
-</blockquote>
-<h2 id="Lease_and_Mutation_Order">Lease and Mutation Order</h2><p>为了减轻<code>master</code>的管理负担，GFS使用<code>lease</code>机制确定<code>primary</code>和<code>secondary</code> <code>chunkserver</code>。成为<code>primary</code>的<code>chunk server</code>能够决定对<code>chunk</code>的变更操作执行的顺序，所有<code>secondary chunksever</code>都会按照<code>primary</code>指定的顺序执行操作。通过<code>lease</code>机制，全局变更操作顺序就可以被确定下来。</p>
-<blockquote>
-<p>  刚开始并不知道什么是lease机制，偶然间看到《分布式原理介绍》一书中讲解的内容，才有了大概的了解，后面会单独写一篇博文记录自己的学习情况。</p>
-</blockquote>
-<p><code>master</code>指定<code>lease</code>的过程如下：</p>
-<p><code>master</code>在<code>chunk</code>副本中指定一个为<code>primary</code>，通常<code>lease</code>时间为60s。<code>primary</code>也可以通过心跳信息来无限期延续时间，只要这个<code>chunk</code>被修改了(<code>原文：as long as the chunk is being mutated, the primary can request and typically receive exten- sions from the master indefinitely。 其实不太不明为什么需要as log as the chunk is being mutated</code>)。<code>master</code>也可以在<code>lease</code>过期前将其收回，比如<code>master</code>想禁止对某个文件的修改(思考：这里回收lease也是通过心跳信息来维护的吗？)。</p>
-<p>下图是一个write操作的具体步骤：</p>
-<p>//插入图片</p>
-<ol>
-<li>客户端向<code>master</code>发起请求，询问<code>master</code>当前<code>chunk</code>的<code>lease</code>信息，以及所有副本的位置。如果当前<code>chunk</code>还没有<code>lease</code>，<code>master</code>会副本中选择一个授予。</li>
-<li><code>master</code>对客户端进行回复。客户端缓存<code>lease</code>信息和副本位置信息。当<code>primary</code>发生故障或者不再持有<code>lease</code>时，客户端会重新请求。</li>
-<li>客户端向所有副本发送数据，顺序是任意的（后文还会提到如何GFS是如何对这一过程进行优化的）。<code>chunkserver</code>先将副本写入内存。</li>
-<li>一旦所有都收到了数据，客户端就会向<code>primary</code>发送一个<code>write request</code>。(思考：这里客户端是怎么知道副本<code>chunkserver</code>都接收到了数据呢？是primary向其发送的信息，还是每个<code>chunkserver</code>单独发送信息？我比较倾向于后者，因为客户端存储了每个<code>chunkserver</code>的位置信息，另外单独发送信息的代价也比较小)。<code>primary</code>收到客户端的写请求后，会为所有变更操作指定连续的序号，然后按照这一顺序写入本地磁盘。(思考：原文：The primary assigns consecutive serialnumbers to all the mutations it receives, possibly from multiple clients。为什么不同客户端的数据会一起写入？客户端发送<code>write request</code>时不是只标识了自己的数据吗？)</li>
-<li><code>primary</code>将<code>write request</code>发送给其他副本，其他副本按相同的顺序将内存中的数据写入磁盘。</li>
-<li>副本写入完成后会给<code>primary</code>发送信息，表示自己已经成功完成操作。</li>
-<li><code>primary</code>回复客户端，表明操作完成。过程中发生的任何错误都会报告给客户端。</li>
-</ol>
-<p>当Append的数据超过一个块大小时，上述流程中的5会有一些不同。<code>primary</code>首先检查数据append之后是否会超过一个<code>chunk</code>大小，如果超过，<code>primary</code>会将当前<code>chunk</code>填充空白数据，并告诉<code>secondary</code>做同样的操作。这些操作完成后，<code>primary</code>会告诉客户端，变更操作应该在下一个<code>chunk</code>上进行操作。</p>
-<p>文中在这一段结尾处说，如果文件过大，被分成多个<code>chunk</code>，那么两个<code>chunk</code>之间可能会插入来自其他客户端的<code>chunk</code>，使得数据成为<code>undefined</code> <strong>虽然可以理解这段含义，但是GFS不需要保证这种情况不会发生吗？</strong></p>
-<p>为了充分利用网络带宽，GFS将控制流和数据流分开处理。控制流是从客户端到<code>primary</code>然后再到<code>secondary</code>，数据流是沿着<code>chunkserver</code>线性传播的，客户端首先将数据发送给离自己最近的<code>chunkserver</code>，<code>chunkserver</code>收到数据后，再将其发送给离自己最近的节点，以此类推，直至所有<code>chunkserver</code>都收到了数据。</p>
-<h2 id="Master_Operation">Master Operation</h2><h4 id="Namespace_Management_and_Locking">Namespace Management and Locking</h4><p>为了不影响<code>master</code>上操作的执行时间，GFS使用命名空间锁机制来保证同一时间可以执行多个操作。例如，如果操作涉及<code>/d1/d2/.../dn/leaf</code>那么他首先需要获取<code>/d1</code>、<code>/d1/d2</code>、<code>/d1/d2/../dn</code>上的读锁，然后根据需求获取<code>/d1/d2/.../dn/leaf</code>上的读锁或写锁。</p>
-<p>这种机制可以使得多个操作同时在同一目录下执行。如多个文件创建操作可以在同一目录下同时进行，每个操作只需要获取当前目录的读锁，以及每个文件的写锁，就可以同时创建文件了。</p>
-<h4 id="Replica_Placement">Replica Placement</h4><p><code>chunk</code>副本的放置策略遵循两个原则：</p>
-<ol>
-<li>尽可能提高可靠性和可获得性</li>
-<li>尽可能多的利用网络带宽</li>
-</ol>
-<p>然而仅仅将副本放置在不同机器上是不够的，他只能保证一个磁盘或机器出错时副本不受影响。我们还需要将副本放置在不同的机架上，这可以保证当整个机架被损毁或者离线时，数据仍然不受损坏。另外，当发生大量读写时，可以充分利用不同机架上的网络带宽。</p>
-<h4 id="Creation,_Re-replication,_Reblancing">Creation, Re-replication, Reblancing</h4><p>有三个原因会导致<code>chunk</code>被重新创建：</p>
-<ol>
-<li>chunk creation</li>
-<li>chunk re-replication</li>
-<li>reblancing</li>
-</ol>
-<p>当创建一个新的<code>chunk</code>时，需要考虑下面三个因素：</p>
-<ol>
-<li><code>chunk</code>尽量放置在磁盘利用率低于平均水平的<code>chunkserver</code>上</li>
-<li>尽量限制一个<code>chunkserver</code>上最近创建的<code>chunk</code>数量。尽管创建<code>chunk</code>本身非常<code>cheap</code>，但新创建的<code>chunk</code>有可能导致``heavy write traffic</li>
-<li>尽量让<code>chunk</code>分布在不同的机架上</li>
-</ol>
-<p>当副本数量低于设定数量时，<code>master</code>就会<code>Re-replication</code>。需要被<code>Re-replication</code>的<code>chunk</code>也有一定的优先级，通常如下：</p>
-<ol>
-<li>离目标副本数量相差多少。相差越多优先级越大。</li>
-<li><code>live files</code>对应的<code>chunk</code>的优先级高于<code>deleted files</code>对应<code>chunk</code>的优先级。</li>
-<li><code>chunk</code>阻碍客户端进程时，其优先级较高。这是为了减少错误对系统的影响。</li>
-</ol>
-<p>为了减少备份对用户使用的影响，<code>master</code>会限制每个<code>chunkserver</code>进行复制操作的数量，同时<code>chunkserver</code>还会控制用于复制操作所用的带宽。</p>
-<p><code>master</code>周期性的进行<code>rebalancing</code>，他会检查当前副本的分布状况，并将副本移动到磁盘空间较大的<code>chunkserver</code>上。通过这一操作，<code>master</code>逐渐填满一个新的<code>chunkserver</code>而不是一次将其填满，这可以避免<code>write traffic</code>的发生。</p>
-<h2 id="Garbage_Collection">Garbage Collection</h2><p>文件被删除时，<code>master</code>首先将这一操作记录到日志中，<code>master</code>并不会立即删除该文件，而是将文件重命名为一个隐藏名称，表明该文件已被删除。<code>master</code>会定期浏览文件系统，当他发现有隐藏的文件时，会将超过一定时间的文件删除掉(通常是三天，可配置) 。而在此之前，该文件还是可以通过新的名称访问，同时也能被恢复到正常文件状态 .</p>
-<p><code>master</code>同时也会定期浏览<code>chunk</code>的<code>namespace</code>。当他发现有<code>orphaned chunk</code>时，会删除这些<code>chunk</code>的<code>meta data</code>。<code>master</code>通过心跳信息发现<code>orphaned chunk</code>，每次发送心跳信息时，<code>chunkserver</code>会将自己的一部分<code>chunk</code>信息发送给<code>master</code>，<code>master</code>通过比对自己的元数据，发现orphaned chunk，并将这些<code>chunk id</code>发送给<code>chunk server</code>。</p>
-<h2 id="Stale_Replica_Detection">Stale Replica Detection</h2><p><code>master</code>在对一个<code>chunk</code>发布<code>lease</code>时会更新这个<code>chunk</code>的版本号，然后通知给其他<code>replica</code> 。如果在此期间<code>replica</code>发生故障了，那么他的版本号就会落后。为了防止客户端读到过时的<code>chunk</code>，<code>master</code>会在客户端询问<code>primary</code>或者<code>chunk</code>位置时返回<code>chunk</code>的版本号，客户端通过对比<code>chunk</code>的版本号，可以知道是否读取到了过时的<code>chunk</code>。</p>
-<p>另一方面，<code>master</code>在进行垃圾回收时，会将过时的<code>chunk</code>清除掉。</p>
-<h2 id="Master_Replica">Master Replica</h2><p><code>master</code>上的<code>operation log</code>和<code>checkpoint</code>是备份在多台机器上的。一个变更操作只有被写入了本地磁盘以及所有备份机器上时，才算是<code>committed</code>的。</p>
-<p><code>shadow master</code>通过读取<code>master</code>上的元数据来提供只读操作。它通常比<code>master</code>要慢大约一秒。</p>
-<h2 id="Data_Intergrity">Data Intergrity</h2><p>每个<code>chunkserver</code>使用<code>checksum</code>来检验数据是否损毁。每个<code>chunk</code>被分割成若干个68kb大小的<code>block</code>，每个块对应一个32位大小的<code>checksum</code>。<code>checksum</code>同时被存储在内存和磁盘中，与数据是分开的。</p>
-<p>对于读操作，<code>checkserver</code>在回应客户端或者其他<code>checkserver</code>的请求之前，首先检查对相应数据块进行<code>checksum</code>校验，这可以防止损坏的数据块传播到其他机器上。如果一个数据块的校验结果和<code>checksum</code>不一致，<code>chunkserver</code>会给请求者返回一个错误信息，同时将错误报告给<code>master</code> 。请求者收到错误信息后，会尝试从其他副本读取数据。<code>master</code>会从其他副本复制正确的<code>chunk</code>，当复制完毕后，<code>master</code>会指示<code>chunkserver</code>删除损毁的<code>chunk</code>。</p>
-<p><code>checksum</code>对于读性能的影响是较小的：大多数读操作都只涉及到几个<code>block</code>,那么读取<code>checksum</code>的信息和校验工作就相对较少。另外，读取<code>checksum</code>信息不需要I/O操作，且校验过程可以和I\O操作并行进行。</p>
-<blockquote>
-<p>GFS client code further reduces this overhead by trying to align reads at checksum block boundaries. 这句话的意思个人理解是尽量使读操作涉及的数据在整数个块内，不要存在跨越两个块，但不在块边界的情况。</p>
-</blockquote>
-<p>对于<code>Append</code>操作，GFS做了一定的优化。对于最后一个不完整的<code>block</code>，使用增量更新<code>checksum</code>的方式，即使是被追加的校验和块在之前已经发生了数据损坏，增量更新后的校验和依然会无法与实际的数据相匹配，在下一次读取时依然能够检测到损坏的块。在进行数据写入操作时，Chunk Server 必须读取并校验包含写入范围起始点和结束点的校验和块，然后进行写入，最后再重新计算校验和。</p>
-<p>空闲时间时，<code>chunkserver</code>会扫描不活跃的<code>chunk</code>，以确保某些 Chunk Replica 即使在不怎么被读取的情况下，其数据的损坏依然能被检测到，同时也确保了这些已损坏的 Chunk Replica 不至于让 Master 认为该 Chunk 已有足够数量的 Replica。</p>
-<p>## </p>
-
     
   </div>
   <footer class="end-sep">
     
+      
+        <div class="alignleft">
+          <a href="/2018/05/28/ The Google File System 总结/#more" class="more-link">阅读全文</a>
+        </div>
       
       
     
