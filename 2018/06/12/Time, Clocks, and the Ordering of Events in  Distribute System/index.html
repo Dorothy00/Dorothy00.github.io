@@ -31,7 +31,7 @@ Definition: 关系⟶需要满足以下三个条件：
 （2）一个进程发送消息的事件为a，另一个接收同一消息的事件为b，那么a⟶b。
 （3）如果a⟶b，">
 <meta property="og:image" content="http://7xoxkx.com1.z0.glb.clouddn.com/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-06-12%20%E4%B8%8A%E5%8D%8810.51.11.png">
-<meta property="og:updated_time" content="2018-06-12T02:58:35.009Z">
+<meta property="og:updated_time" content="2018-06-12T03:02:06.700Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="分布式原理学习（四）： Time, Clocks, and the Ordering of Events in  Distribute System">
 <meta name="twitter:description" content="Partial Ordering假设一个系统由多个进程组成，每个进程包含一系列事件。接收或发送消息也是进程中的一个事件。我们用⟶表示‘happend before’关系，定义如下：
@@ -99,9 +99,9 @@ Definition: 关系⟶需要满足以下三个条件：
 <p>“时空图”可以描述上述定义：</p>
 <p><img src="http://7xoxkx.com1.z0.glb.clouddn.com/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-06-12%20%E4%B8%8A%E5%8D%8810.51.11.png" alt=""></p>
 <p>图中横向代表空间，纵向表示时间，越往后的时间纵向坐标越高。图中的点表示事件，竖线表示进程。从图可以看出a⟶b表示事件a可以沿着竖线或者消息线到达b。</p>
-<p>也可以将a⟶b理解为事件a会影响事件b。只有当两个事件互不影响时，才可以称他们为并发的。例如图中的p~3~和q~3~是并发的，尽管图中p~3~的物理时间先于q~3~发生，在收到消息p~4~之前，进程P是不知道进程Q在q~3~做了什么的。</p>
+<p>也可以将a⟶b理解为事件a会影响事件b。只有当两个事件互不影响时，才可以称他们为并发的。例如图中的p<sub>3</sub>和q<sub>3</sub>是并发的，尽管图中p~3~的物理时间先于q<sub>3</sub>发生，在收到消息p<sub>4</sub>之前，进程P是不知道进程Q在q<sub>3</sub>做了什么的。</p>
 <a id="more"></a>
-<h2 id="Logical_Clocks">Logical Clocks</h2><p>系统中事件的时间用一个序号表示，这个序号代表量该事件发生的时间。对于每个P~i~定义了一个时钟函数C<sub>i</sub>，C<sub>i</sub><a>是事件a发生的事件序号。由于C<sub>i</sub><a>是一个逻辑时钟，和物理时钟没有关系。由于不依赖物理时钟，为了保证系统时钟的正确性，我们定义的时钟必须基于事件发生的先后顺序，即如果a先于b发生，那么a的时钟序号应该小于b的时钟序号，定义如下：</a></a></p>
+<h2 id="Logical_Clocks">Logical Clocks</h2><p>系统中事件的时间用一个序号表示，这个序号代表量该事件发生的时间。对于每个P<sub>i</sub>定义了一个时钟函数C<sub>i</sub>，C<sub>i</sub><a>是事件a发生的事件序号。由于C<sub>i</sub><a>是一个逻辑时钟，和物理时钟没有关系。由于不依赖物理时钟，为了保证系统时钟的正确性，我们定义的时钟必须基于事件发生的先后顺序，即如果a先于b发生，那么a的时钟序号应该小于b的时钟序号，定义如下：</a></a></p>
 <p>Clock Condition: 对于任意事件a，b，如果a⟶b，那么C<a> &lt; C<b></b></a></p>
 <p>需要注意该命题的逆命题不成立。（图中C(p<sub>3</sub>)  &lt; C(q<sub>3</sub>)但是p<sub>3</sub> ↛ q<sub>3</sub>）</p>
 <p>可以看出关系⟶满足以下两个条件：</p>
