@@ -31,7 +31,7 @@ Definition: 关系⟶需要满足以下三个条件：
 （2）一个进程发送消息的事件为a，另一个接收同一消息的事件为b，那么a⟶b。
 （3）如果a⟶b，">
 <meta property="og:image" content="http://7xoxkx.com1.z0.glb.clouddn.com/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-06-12%20%E4%B8%8A%E5%8D%8810.51.11.png">
-<meta property="og:updated_time" content="2018-06-12T02:52:18.621Z">
+<meta property="og:updated_time" content="2018-06-12T02:58:35.009Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="分布式原理学习（四）： Time, Clocks, and the Ordering of Events in  Distribute System">
 <meta name="twitter:description" content="Partial Ordering假设一个系统由多个进程组成，每个进程包含一系列事件。接收或发送消息也是进程中的一个事件。我们用⟶表示‘happend before’关系，定义如下：
@@ -101,32 +101,32 @@ Definition: 关系⟶需要满足以下三个条件：
 <p>图中横向代表空间，纵向表示时间，越往后的时间纵向坐标越高。图中的点表示事件，竖线表示进程。从图可以看出a⟶b表示事件a可以沿着竖线或者消息线到达b。</p>
 <p>也可以将a⟶b理解为事件a会影响事件b。只有当两个事件互不影响时，才可以称他们为并发的。例如图中的p~3~和q~3~是并发的，尽管图中p~3~的物理时间先于q~3~发生，在收到消息p~4~之前，进程P是不知道进程Q在q~3~做了什么的。</p>
 <a id="more"></a>
-<h2 id="Logical_Clocks">Logical Clocks</h2><p>系统中事件的时间用一个序号表示，这个序号代表量该事件发生的时间。对于每个P~i~定义了一个时钟函数C~i~，C<sub>i</sub><a>是事件a发生的事件序号。由于C<sub>i</sub><a>是一个逻辑时钟，和物理时钟没有关系。由于不依赖物理时钟，为了保证系统时钟的正确性，我们定义的时钟必须基于事件发生的先后顺序，即如果a先于b发生，那么a的时钟序号应该小于b的时钟序号，定义如下：</a></a></p>
+<h2 id="Logical_Clocks">Logical Clocks</h2><p>系统中事件的时间用一个序号表示，这个序号代表量该事件发生的时间。对于每个P~i~定义了一个时钟函数C<sub>i</sub>，C<sub>i</sub><a>是事件a发生的事件序号。由于C<sub>i</sub><a>是一个逻辑时钟，和物理时钟没有关系。由于不依赖物理时钟，为了保证系统时钟的正确性，我们定义的时钟必须基于事件发生的先后顺序，即如果a先于b发生，那么a的时钟序号应该小于b的时钟序号，定义如下：</a></a></p>
 <p>Clock Condition: 对于任意事件a，b，如果a⟶b，那么C<a> &lt; C<b></b></a></p>
-<p>需要注意该命题的逆命题不成立。（图中C(p~3~)  &lt; C(q~3~)但是p~3~ ↛ q~3~）</p>
+<p>需要注意该命题的逆命题不成立。（图中C(p<sub>3</sub>)  &lt; C(q<sub>3</sub>)但是p<sub>3</sub> ↛ q<sub>3</sub>）</p>
 <p>可以看出关系⟶满足以下两个条件：</p>
-<p>C1: 如果a和b是进程P~i~中的事件，并且a先于b发生，那么C~i~<a> &lt; C~i~<b></b></a></p>
-<p>C2: 如果a是进程P~i~发送消息的事件，b是进程P~j~接收消息的事件，那么C~i~<a> &lt; C~j~<b></b></a></p>
+<p>C1: 如果a和b是进程P<sub>i</sub>中的事件，并且a先于b发生，那么C<sub>i</sub><a> &lt; C<sub>i</sub><b></b></a></p>
+<p>C2: 如果a是进程P<sub>i</sub>发送消息的事件，b是进程P<sub>j</sub>接收消息的事件，那么C<sub>i</sub><a> &lt; C<sub>j</sub><b></b></a></p>
 <p>为了满足C1和C2系统需要遵守如下的规则：</p>
 <p>IR1: 进程P~i~内的两个连续事件的序列号需要递增。</p>
-<p>IR2: (a) a是进程P~i~发送消息的事件，b是进程P~j~接收消息的事件，T~m~=C~i~<a> (b) P~j~ 接收到消息时将C~j~<b>设为大于T~m~以及高于自己当前时钟的值。</b></a></p>
+<p>IR2: (a) a是进程P<sub>i</sub>发送消息的事件，b是进程P<sub>j</sub>接收消息的事件，T<sub>m</sub>=C<sub>i</sub><a> (b) P<sub>j</sub>接收到消息时将C<sub>j</sub><b>设为大于T<sub>m</sub>以及高于自己当前时钟的值。</b></a></p>
 <h2 id="Ordering_the_Events_Totally">Ordering the Events Totally</h2><p>下面定义系统中的全序关系。</p>
 <p>我们用≺表示系统中进程的全序关系，用⇒表示事件的全序关系，那么：</p>
 <p>系统中事件a和b满足全序关系当且仅当：</p>
-<p>（i）C~i~<a>  &lt; C~j~<b></b></a></p>
-<p>（ii） C~i~<a>  = C~j~<b> 且 P~i~ ≺  P~j~ </b></a></p>
+<p>（i）C<sub>i</sub><a>  &lt; C<sub>j</sub><b></b></a></p>
+<p>（ii） C<sub>i</sub><a>  = C<sub>j</sub><b> 且 P<sub>i</sub> ≺  P<sub>j</sub></b></a></p>
 <p>可以看出如果a⟶b，那么a ⇒ b。</p>
 <h2 id="利用全序关系解决分布式资源互斥问题">利用全序关系解决分布式资源互斥问题</h2><p>考虑如下场景：一个资源一次只能被一个进程使用，进程之间必须使用同步措施以保证不会发生资源访问冲突。我们希望找到一种算法满足以下三个条件：</p>
 <p>（i）已经获得资源的进程需要先释放，其他进程才能获得该资源。</p>
 <p>（ii）资源授予进程的顺序需要按照他们的请求顺序。</p>
 <p>（iii）如果每个获得资源的进程最终都能释放资源，那么每一个申请资源的进程最终都能获得资源。</p>
-<p>使用一个中心的进程调度器按照资源请求的接收顺序授予资源将不能满足上述条件。例如，P~0~是中心调度进程，P~1~首先发送了一个消息给P~0~，然后发送了一个消息给P~2~，P~2~收到消息后又发送了一个消息给P~0~，那么P~2~发送的消息可能先于P~1~的消息到达P~0~，P~0~就会先将资源授予P~2~，这违反了条件(ii)。</p>
-<p>为了解决上述问题，我们实现了一个满足全序关系的系统，系统中每个进程都维护一个<code>request queue</code>，初始时都包含T~0~:P~0~ request resource 。算法需要满足以下5个规则：</p>
-<p>（1）P~i~请求资源时，首先给系统中所有其他进程发送一个T~m~:P~i~ request resource 的请求消息，并将该消息加入到自己的request queue中，T~m~是消息的时间戳。</p>
-<p>（2）进程P~j~将收到消息T~m~:P~i~ request resource 加入自己的request queue，并给P~i~发送一个acknowledge message</p>
-<p>（3）P~i~释放资源时，会将T~m~:P~i~ request resource 从自己的request queue中移除，并且给其他进程发送P~i~ release resource 的消息。</p>
-<p>（4）进程P~j~收到 P~i~ release resource 的消息时，它会将自己request queue中的T~m~:P~i~ request resource 消息移除。</p>
-<p>（5）当满足以下两个条件时，P~i~可以获得资源：（i） T~m~:P~i~ request resource 在队列中的全序关系最小 （ii）P~i~收到了来自其他进程的关于消息T~m~:P~i~的acknowledge message。</p>
+<p>使用一个中心的进程调度器按照资源请求的接收顺序授予资源将不能满足上述条件。例如，P<sub>0</sub>是中心调度进程，P<sub>1</sub>首先发送了一个消息给P<sub>0</sub>，然后发送了一个消息给P<sub>2</sub>，P<sub>2</sub>收到消息后又发送了一个消息给P<sub>0</sub>，那么P<sub>2</sub>发送的消息可能先于P<sub>1</sub>的消息到达P<sub>0</sub>，P<sub>0</sub>就会先将资源授予P<sub>2</sub>，这违反了条件(ii)。</p>
+<p>为了解决上述问题，我们实现了一个满足全序关系的系统，系统中每个进程都维护一个<code>request queue</code>，初始时都包含T<sub>0</sub>:P<sub>0</sub> request resource 。算法需要满足以下5个规则：</p>
+<p>（1）P~i~请求资源时，首先给系统中所有其他进程发送一个T<sub>m</sub>:P<sub>i</sub>request resource 的请求消息，并将该消息加入到自己的request queue中，T~m~是消息的时间戳。</p>
+<p>（2）进程P~j~将收到消息T<sub>m</sub>:P<sub>i</sub>request resource 加入自己的request queue，并给P~i~发送一个acknowledge message</p>
+<p>（3）P~i~释放资源时，会将T<sub>m</sub>:P<sub>i</sub>request resource 从自己的request queue中移除，并且给其他进程发送P<sub>i</sub> release resource 的消息。</p>
+<p>（4）进程P~j~收到 P<sub>i</sub> release resource 的消息时，它会将自己request queue中的T<sub>m</sub>:P<sub>i</sub> request resource 消息移除。</p>
+<p>（5）当满足以下两个条件时，P~i~可以获得资源：（i）T<sub>m</sub>:P<sub>i</sub> request resource 在队列中的全序关系最小 （ii）P~i~收到了来自其他进程的关于消息T<sub>m</sub>:P<sub>i</sub>的acknowledge message。</p>
 <p>那么上述算法定义的5个规则是如何满足条件（i）（ii）（iii）的呢？</p>
 <p>条件（i）：根据规则（3）、（4）我们可以知道，进程在释放资源时，会首先从自己的request queue中移除消息，然后通知其他进程移除消息，使得其他进程的消息变成全序最小的，最终可以获得资源。因而满足条件（i）。</p>
 <p>条件（ii）：全序规则是由偏序规则扩展而来，因而可以满足偏序定义的顺序（原文限定，事件接收的顺序和发送的顺序一致），因而满足条件（ii）。</p>
