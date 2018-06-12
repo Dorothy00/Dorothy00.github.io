@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="chrome=1">
   
-  <title>分布式理论基础学习（四）： Time, Clocks, and the Ordering of Events in  Distribute System | DOROTHY</title>
+  <title>分布式原理学习（四）： Time, Clocks, and the Ordering of Events in  Distribute System | DOROTHY</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   
     <meta name="author" content="Dorothy Zhang">
@@ -22,7 +22,7 @@ Definition: 关系⟶需要满足以下三个条件：
 （2）一个进程发送消息的事件为a，另一个接收同一消息的事件为b，那么a⟶b。
 （3）如果a⟶b，">
 <meta property="og:type" content="article">
-<meta property="og:title" content="分布式理论基础学习（四）： Time, Clocks, and the Ordering of Events in  Distribute System">
+<meta property="og:title" content="分布式原理学习（四）： Time, Clocks, and the Ordering of Events in  Distribute System">
 <meta property="og:url" content="http://yoursite.com/2018/06/12/Time, Clocks, and the Ordering of Events in  Distribute System/index.html">
 <meta property="og:site_name" content="DOROTHY">
 <meta property="og:description" content="Partial Ordering假设一个系统由多个进程组成，每个进程包含一系列事件。接收或发送消息也是进程中的一个事件。我们用⟶表示‘happend before’关系，定义如下：
@@ -30,9 +30,9 @@ Definition: 关系⟶需要满足以下三个条件：
 （1）如果事件a和b是在同一进程中，并且a先于b发生，那么a⟶b。
 （2）一个进程发送消息的事件为a，另一个接收同一消息的事件为b，那么a⟶b。
 （3）如果a⟶b，">
-<meta property="og:updated_time" content="2018-06-12T02:41:33.150Z">
+<meta property="og:updated_time" content="2018-06-12T02:44:17.533Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="分布式理论基础学习（四）： Time, Clocks, and the Ordering of Events in  Distribute System">
+<meta name="twitter:title" content="分布式原理学习（四）： Time, Clocks, and the Ordering of Events in  Distribute System">
 <meta name="twitter:description" content="Partial Ordering假设一个系统由多个进程组成，每个进程包含一系列事件。接收或发送消息也是进程中的一个事件。我们用⟶表示‘happend before’关系，定义如下：
 Definition: 关系⟶需要满足以下三个条件：
 （1）如果事件a和b是在同一进程中，并且a先于b发生，那么a⟶b。
@@ -74,7 +74,7 @@ Definition: 关系⟶需要满足以下三个条件：
   <header>
     
   
-    <h1 class="title">分布式理论基础学习（四）： Time, Clocks, and the Ordering of Events in  Distribute System</h1>
+    <h1 class="title">分布式原理学习（四）： Time, Clocks, and the Ordering of Events in  Distribute System</h1>
   
 
     
@@ -99,7 +99,7 @@ Definition: 关系⟶需要满足以下三个条件：
 <p>//插入图片</p>
 <p>图中横向代表空间，纵向表示时间，越往后的时间纵向坐标越高。图中的点表示事件，竖线表示进程。从图可以看出a⟶b表示事件a可以沿着竖线或者消息线到达b。</p>
 <p>也可以将a⟶b理解为事件a会影响事件b。只有当两个事件互不影响时，才可以称他们为并发的。例如图中的p~3~和q~3~是并发的，尽管图中p~3~的物理时间先于q~3~发生，在收到消息p~4~之前，进程P是不知道进程Q在q~3~做了什么的。</p>
-<p>&lt;!—more–&gt;</p>
+<a id="more"></a>
 <h2 id="Logical_Clocks">Logical Clocks</h2><p>系统中事件的时间用一个序号表示，这个序号代表量该事件发生的时间。对于每个P~i~定义了一个时钟函数C~i~，C~i~<a>是事件a发生的事件序号。由于C~i~<a>是一个逻辑时钟，和物理时钟没有关系。由于不依赖物理时钟，为了保证系统时钟的正确性，我们定义的时钟必须基于事件发生的先后顺序，即如果a先于b发生，那么a的时钟序号应该小于b的时钟序号，定义如下：</a></a></p>
 <p>Clock Condition: 对于任意事件a，b，如果a⟶b，那么C<a> &lt; C<b></b></a></p>
 <p>需要注意该命题的逆命题不成立。（图中C(p~3~)  &lt; C(q~3~)但是p~3~ ↛ q~3~）</p>
