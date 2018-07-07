@@ -4,38 +4,34 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="chrome=1">
   
-  <title>DOROTHY</title>
+  <title>SkipList学习 | DOROTHY</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   
     <meta name="author" content="Dorothy Zhang">
   
   
-    <meta name="description" content="title: SkipList学习date: 2018-7-7 15:49:11categories: 技术
-tags: SkipList### 
+    <meta name="description" content="tags: SkipList### 
 最近打算学习一下LevelDB的源码，由于涉及到SkipList，而SkipList又是数据存储中常用的数据结构，遂好好学习一下。
-1. SkipList是什么SkipList是一种用来替代平衡树的数据结构，常见的平衡树有红黑树、b树、AVL树等。但是">
+1. SkipList是什么SkipList是一种用来替代平衡树的数据结构，常见的平衡树有红黑树、b树、AVL树等。但是平衡树维护树的平衡算法过于复杂，使用SkipList简化了插入和删除操作，同时也能取得O(logn)的时间复杂">
   
-  <meta name="description" content="title: SkipList学习date: 2018-7-7 15:49:11categories: 技术
-tags: SkipList### 
+  <meta name="description" content="tags: SkipList### 
 最近打算学习一下LevelDB的源码，由于涉及到SkipList，而SkipList又是数据存储中常用的数据结构，遂好好学习一下。
-1. SkipList是什么SkipList是一种用来替代平衡树的数据结构，常见的平衡树有红黑树、b树、AVL树等。但是">
+1. SkipList是什么SkipList是一种用来替代平衡树的数据结构，常见的平衡树有红黑树、b树、AVL树等。但是平衡树维护树的平衡算法过于复杂，使用SkipList简化了插入和删除操作，同时也能取得O(logn)的时间复杂">
 <meta property="og:type" content="article">
-<meta property="og:title" content="DOROTHY">
+<meta property="og:title" content="SkipList学习">
 <meta property="og:url" content="http://yoursite.com/2018/07/07/SkipList学习/index.html">
 <meta property="og:site_name" content="DOROTHY">
-<meta property="og:description" content="title: SkipList学习date: 2018-7-7 15:49:11categories: 技术
-tags: SkipList### 
+<meta property="og:description" content="tags: SkipList### 
 最近打算学习一下LevelDB的源码，由于涉及到SkipList，而SkipList又是数据存储中常用的数据结构，遂好好学习一下。
-1. SkipList是什么SkipList是一种用来替代平衡树的数据结构，常见的平衡树有红黑树、b树、AVL树等。但是">
+1. SkipList是什么SkipList是一种用来替代平衡树的数据结构，常见的平衡树有红黑树、b树、AVL树等。但是平衡树维护树的平衡算法过于复杂，使用SkipList简化了插入和删除操作，同时也能取得O(logn)的时间复杂">
 <meta property="og:image" content="http://7xoxkx.com1.z0.glb.clouddn.com/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-07-07%20%E4%B8%8B%E5%8D%883.50.33.png">
 <meta property="og:image" content="http://7xoxkx.com1.z0.glb.clouddn.com/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-07-07%20%E4%B8%8B%E5%8D%883.51.58.png">
-<meta property="og:updated_time" content="2018-07-07T07:53:39.455Z">
+<meta property="og:updated_time" content="2018-07-07T07:59:29.378Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="DOROTHY">
-<meta name="twitter:description" content="title: SkipList学习date: 2018-7-7 15:49:11categories: 技术
-tags: SkipList### 
+<meta name="twitter:title" content="SkipList学习">
+<meta name="twitter:description" content="tags: SkipList### 
 最近打算学习一下LevelDB的源码，由于涉及到SkipList，而SkipList又是数据存储中常用的数据结构，遂好好学习一下。
-1. SkipList是什么SkipList是一种用来替代平衡树的数据结构，常见的平衡树有红黑树、b树、AVL树等。但是">
+1. SkipList是什么SkipList是一种用来替代平衡树的数据结构，常见的平衡树有红黑树、b树、AVL树等。但是平衡树维护树的平衡算法过于复杂，使用SkipList简化了插入和删除操作，同时也能取得O(logn)的时间复杂">
   
   
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -72,12 +68,12 @@ tags: SkipList###
   <header>
     
   
-    <h1 class="title"></h1>
+    <h1 class="title">SkipList学习</h1>
   
 
     
       <a href="/2018/07/07/SkipList学习/">
-  <time datetime="2018-07-07T07:53:39.555Z">
+  <time datetime="2018-07-07T07:49:11.000Z">
     2018-07-07
   </time>
 </a>
@@ -86,8 +82,7 @@ tags: SkipList###
   
   <div class="entry">
     
-      <p>title: SkipList学习<br>date: 2018-7-7 15:49:11<br>categories: 技术</p>
-<h2 id="tags:_SkipList">tags: SkipList</h2><p>### </p>
+      <h2 id="tags:_SkipList">tags: SkipList</h2><p>### </p>
 <p>最近打算学习一下LevelDB的源码，由于涉及到SkipList，而SkipList又是数据存储中常用的数据结构，遂好好学习一下。</p>
 <h4 id="1-_SkipList是什么">1. SkipList是什么</h4><p>SkipList是一种用来替代平衡树的数据结构，常见的平衡树有红黑树、b树、AVL树等。但是平衡树维护树的平衡算法过于复杂，使用SkipList简化了插入和删除操作，同时也能取得O(logn)的时间复杂度。那么SkipList是如何做到的呢？我们看下图：</p>
 <p><img src="http://7xoxkx.com1.z0.glb.clouddn.com/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-07-07%20%E4%B8%8B%E5%8D%883.50.33.png" alt=""></p>
@@ -106,6 +101,10 @@ tags: SkipList###
   <footer>
     
       
+  <div class="categories">
+    <a class="categories-link" href="/categories/技术/">技术</a>
+  </div>
+
       
     
   </footer>
