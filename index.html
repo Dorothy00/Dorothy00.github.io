@@ -61,6 +61,48 @@
   <header>
     
   
+    <h1 class="title"><a href="/2018/07/07/SkipList学习/"></a></h1>
+  
+
+    
+      <a href="/2018/07/07/SkipList学习/">
+  <time datetime="2018-07-07T07:53:39.555Z">
+    2018-07-07
+  </time>
+</a>
+    
+  </header>
+  
+  <div class="entry">
+    
+      <p>title: SkipList学习<br>date: 2018-7-7 15:49:11<br>categories: 技术</p>
+<h2 id="tags:_SkipList">tags: SkipList</h2><p>### </p>
+<p>最近打算学习一下LevelDB的源码，由于涉及到SkipList，而SkipList又是数据存储中常用的数据结构，遂好好学习一下。</p>
+<h4 id="1-_SkipList是什么">1. SkipList是什么</h4><p>SkipList是一种用来替代平衡树的数据结构，常见的平衡树有红黑树、b树、AVL树等。但是平衡树维护树的平衡算法过于复杂，使用SkipList简化了插入和删除操作，同时也能取得O(logn)的时间复杂度。那么SkipList是如何做到的呢？我们看下图：</p>
+<p><img src="http://7xoxkx.com1.z0.glb.clouddn.com/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-07-07%20%E4%B8%8B%E5%8D%883.50.33.png" alt=""></p>
+<p>图中的a是一个有序的链表，他的查找时间复杂度是O(n)，如果我们每隔一个节点多增加一个指针，指向该节点间距为2的节点（图中b），那么此时查找的时间复杂度是O(n/2)。以此类推，通过不断增加指针，最终查找的时间复杂度会将为O(logn)。</p>
+<p>SkipList中的节点指针并不是严格按照上述规律分配的，每个节点的层数是随机分配的，William Pugh 在SkipList的论文中给出了证明方法。这里不具体说明了（没看懂==）。</p>
+    
+  </div>
+  <footer class="end-sep">
+    
+      
+        <div class="alignleft">
+          <a href="/2018/07/07/SkipList学习/#more" class="more-link">阅读全文</a>
+        </div>
+      
+      
+    
+  </footer>
+</article>
+
+
+
+  
+    <article class="post">
+  <header>
+    
+  
     <h1 class="title"><a href="/2018/06/12/Time, Clocks, and the Ordering of Events in  Distribute System/">分布式原理学习（四）： Time, Clocks, and the Ordering of Events in  Distribute System</a></h1>
   
 
@@ -400,42 +442,6 @@
       
         <div class="alignleft">
           <a href="/2017/03/26/AsyncTask源码分析/#more" class="more-link">阅读全文</a>
-        </div>
-      
-      
-    
-  </footer>
-</article>
-
-
-
-  
-    <article class="post">
-  <header>
-    
-  
-    <h1 class="title"><a href="/2016/11/12/iosched源码阅读之ActionBar自动隐藏分析/">iosched源码阅读之ActionBar自动隐藏分析</a></h1>
-  
-
-    
-      <a href="/2016/11/12/iosched源码阅读之ActionBar自动隐藏分析/">
-  <time datetime="2016-11-12T06:41:39.000Z">
-    2016-11-12
-  </time>
-</a>
-    
-  </header>
-  
-  <div class="entry">
-    
-      <p>花了一下午看了一下iosched中ActionBar自动隐藏的机制，和知乎最新版Android客户端自动隐藏和显示的效果基本一致(应该是知乎仿照iosched写的？)。首先看下ActionBar自动隐藏的效果：<br>
-    
-  </div>
-  <footer class="end-sep">
-    
-      
-        <div class="alignleft">
-          <a href="/2016/11/12/iosched源码阅读之ActionBar自动隐藏分析/#more" class="more-link">阅读全文</a>
         </div>
       
       

@@ -1,0 +1,182 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  
+  <title>DOROTHY</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  
+    <meta name="author" content="Dorothy Zhang">
+  
+  
+    <meta name="description" content="title: SkipList学习date: 2018-7-7 15:49:11categories: 技术
+tags: SkipList### 
+最近打算学习一下LevelDB的源码，由于涉及到SkipList，而SkipList又是数据存储中常用的数据结构，遂好好学习一下。
+1. SkipList是什么SkipList是一种用来替代平衡树的数据结构，常见的平衡树有红黑树、b树、AVL树等。但是">
+  
+  <meta name="description" content="title: SkipList学习date: 2018-7-7 15:49:11categories: 技术
+tags: SkipList### 
+最近打算学习一下LevelDB的源码，由于涉及到SkipList，而SkipList又是数据存储中常用的数据结构，遂好好学习一下。
+1. SkipList是什么SkipList是一种用来替代平衡树的数据结构，常见的平衡树有红黑树、b树、AVL树等。但是">
+<meta property="og:type" content="article">
+<meta property="og:title" content="DOROTHY">
+<meta property="og:url" content="http://yoursite.com/2018/07/07/SkipList学习/index.html">
+<meta property="og:site_name" content="DOROTHY">
+<meta property="og:description" content="title: SkipList学习date: 2018-7-7 15:49:11categories: 技术
+tags: SkipList### 
+最近打算学习一下LevelDB的源码，由于涉及到SkipList，而SkipList又是数据存储中常用的数据结构，遂好好学习一下。
+1. SkipList是什么SkipList是一种用来替代平衡树的数据结构，常见的平衡树有红黑树、b树、AVL树等。但是">
+<meta property="og:image" content="http://7xoxkx.com1.z0.glb.clouddn.com/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-07-07%20%E4%B8%8B%E5%8D%883.50.33.png">
+<meta property="og:image" content="http://7xoxkx.com1.z0.glb.clouddn.com/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-07-07%20%E4%B8%8B%E5%8D%883.51.58.png">
+<meta property="og:updated_time" content="2018-07-07T07:53:39.455Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="DOROTHY">
+<meta name="twitter:description" content="title: SkipList学习date: 2018-7-7 15:49:11categories: 技术
+tags: SkipList### 
+最近打算学习一下LevelDB的源码，由于涉及到SkipList，而SkipList又是数据存储中常用的数据结构，遂好好学习一下。
+1. SkipList是什么SkipList是一种用来替代平衡树的数据结构，常见的平衡树有红黑树、b树、AVL树等。但是">
+  
+  
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+</head>
+
+<body>
+  <header id="header">
+  <div class="title-wrapper">
+    <div class="title">
+      <h1><a href="/">DOROTHY</a></h1>
+      <p><a href="/"></a></p>
+    </div>
+  </div>
+</header>
+<nav class="nav">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+      <li><a href="/about">About</a></li>
+    
+    
+  </ul>
+</nav>
+
+  <div class="wrapper">
+    <div class="content"><article class="post">
+  <header>
+    
+  
+    <h1 class="title"></h1>
+  
+
+    
+      <a href="/2018/07/07/SkipList学习/">
+  <time datetime="2018-07-07T07:53:39.555Z">
+    2018-07-07
+  </time>
+</a>
+    
+  </header>
+  
+  <div class="entry">
+    
+      <p>title: SkipList学习<br>date: 2018-7-7 15:49:11<br>categories: 技术</p>
+<h2 id="tags:_SkipList">tags: SkipList</h2><p>### </p>
+<p>最近打算学习一下LevelDB的源码，由于涉及到SkipList，而SkipList又是数据存储中常用的数据结构，遂好好学习一下。</p>
+<h4 id="1-_SkipList是什么">1. SkipList是什么</h4><p>SkipList是一种用来替代平衡树的数据结构，常见的平衡树有红黑树、b树、AVL树等。但是平衡树维护树的平衡算法过于复杂，使用SkipList简化了插入和删除操作，同时也能取得O(logn)的时间复杂度。那么SkipList是如何做到的呢？我们看下图：</p>
+<p><img src="http://7xoxkx.com1.z0.glb.clouddn.com/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-07-07%20%E4%B8%8B%E5%8D%883.50.33.png" alt=""></p>
+<p>图中的a是一个有序的链表，他的查找时间复杂度是O(n)，如果我们每隔一个节点多增加一个指针，指向该节点间距为2的节点（图中b），那么此时查找的时间复杂度是O(n/2)。以此类推，通过不断增加指针，最终查找的时间复杂度会将为O(logn)。</p>
+<p>SkipList中的节点指针并不是严格按照上述规律分配的，每个节点的层数是随机分配的，William Pugh 在SkipList的论文中给出了证明方法。这里不具体说明了（没看懂==）。</p>
+<a id="more"></a>
+<h4 id="2-_SkipList的查找、插入、删除算法">2. SkipList的查找、插入、删除算法</h4><p>查找的思想是从最上层开始找，当下一节点比要查找的数大时，转到下层继续查找，直到最底层。</p>
+<p>插入首先利用查找算法找到当前要插入的位置，同时记录每一层需要更新的节点，每一层中最大的小于要插入元素的节点即位要更新的节点。位置确定后，更新该节点的指针，完成插入。</p>
+<p>删除算法和插入算法类似，不过需要注意可能删除了层数最大的节点，此时需要更新SkipList的层数。</p>
+<p>图示如下：</p>
+<p><img src="http://7xoxkx.com1.z0.glb.clouddn.com/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-07-07%20%E4%B8%8B%E5%8D%883.51.58.png" alt=""></p>
+<h4 id="3-_Java代码实现">3. Java代码实现</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SkipList</span> </span>&#123;</span><br><span class="line">	<span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">int</span> MAX_LEVEL;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">int</span> level;</span><br><span class="line">	<span class="keyword">private</span> SkipListNode head;</span><br><span class="line">	<span class="keyword">private</span> SkipListNode tail;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">double</span> P;</span><br><span class="line">	</span><br><span class="line">	<span class="class"><span class="keyword">class</span> <span class="title">SkipListNode</span> </span>&#123;</span><br><span class="line">		<span class="keyword">int</span> level;</span><br><span class="line">		<span class="keyword">int</span> key;</span><br><span class="line">		String value;</span><br><span class="line">		SkipListNode[] forward;</span><br><span class="line">		</span><br><span class="line">		<span class="function"><span class="keyword">public</span> <span class="title">SkipListNode</span><span class="params">(<span class="keyword">int</span> key, String value, <span class="keyword">int</span> level)</span> </span>&#123;</span><br><span class="line">			<span class="keyword">this</span>.key = key;</span><br><span class="line">			<span class="keyword">this</span>.value = value;</span><br><span class="line">			<span class="keyword">this</span>.forward = <span class="keyword">new</span> SkipListNode[level];</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="title">SkipList</span><span class="params">(<span class="keyword">int</span> maxLevel, <span class="keyword">double</span> p)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.MAX_LEVEL = maxLevel;</span><br><span class="line">		<span class="keyword">this</span>.P = p;</span><br><span class="line">		head = <span class="keyword">new</span> SkipListNode(Integer.MIN_VALUE, <span class="keyword">null</span>, MAX_LEVEL);</span><br><span class="line">		tail = <span class="keyword">new</span> SkipListNode(Integer.MAX_VALUE, <span class="keyword">null</span>, MAX_LEVEL);</span><br><span class="line">		<span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; head.forward.length; i++) &#123;</span><br><span class="line">			head.forward[i] = tail;</span><br><span class="line">		&#125;</span><br><span class="line">		level = <span class="number">1</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	<span class="function"><span class="keyword">public</span> String <span class="title">search</span><span class="params">(<span class="keyword">int</span> key)</span> </span>&#123;</span><br><span class="line">		SkipListNode curNode = head;</span><br><span class="line">		<span class="keyword">for</span>(<span class="keyword">int</span> i = curNode.level - <span class="number">1</span>; i &gt;= <span class="number">0</span>; i--) &#123;</span><br><span class="line">			<span class="keyword">if</span>(curNode.forward[i].key &lt; key) &#123;</span><br><span class="line">				curNode = curNode.forward[i];</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		curNode = curNode.forward[<span class="number">0</span>];</span><br><span class="line">		<span class="keyword">if</span>(curNode.key == key)</span><br><span class="line">			<span class="keyword">return</span> curNode.value;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">insert</span><span class="params">(<span class="keyword">int</span> key, String value)</span> </span>&#123;</span><br><span class="line">		SkipListNode[] update = <span class="keyword">new</span> SkipListNode[MAX_LEVEL];</span><br><span class="line">		SkipListNode curNode = head;</span><br><span class="line">		<span class="keyword">for</span>(<span class="keyword">int</span> i = level - <span class="number">1</span>; i &gt;= <span class="number">0</span>; i--) &#123;</span><br><span class="line">			<span class="keyword">while</span>(curNode.forward[i].key &lt; key) &#123;</span><br><span class="line">				curNode = curNode.forward[i];</span><br><span class="line">			&#125;</span><br><span class="line">			update[i] = curNode;</span><br><span class="line">		&#125;</span><br><span class="line">		curNode = curNode.forward[<span class="number">0</span>];</span><br><span class="line">		<span class="keyword">if</span>(curNode.key == key)</span><br><span class="line">			curNode.value = value;</span><br><span class="line">		<span class="keyword">else</span> &#123;</span><br><span class="line">			<span class="keyword">int</span> lvl = randomLevel();</span><br><span class="line">			<span class="keyword">if</span>(lvl &gt; level) &#123;</span><br><span class="line">				<span class="keyword">for</span>(<span class="keyword">int</span> i = lvl - <span class="number">1</span>; i &gt;= level; i--) &#123;</span><br><span class="line">					update[i] = head;</span><br><span class="line">				&#125;</span><br><span class="line">				level = lvl;</span><br><span class="line">			&#125;</span><br><span class="line">			SkipListNode node = <span class="keyword">new</span> SkipListNode(key, value, lvl);</span><br><span class="line">			<span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; lvl; i++) &#123;</span><br><span class="line">				node.forward[i] = update[i].forward[i];</span><br><span class="line">				update[i].forward[i] = node;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;	</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">delete</span><span class="params">(<span class="keyword">int</span> key)</span> </span>&#123;</span><br><span class="line">		SkipListNode[] update = <span class="keyword">new</span> SkipListNode[level];</span><br><span class="line">		SkipListNode curNode = head;</span><br><span class="line">		<span class="keyword">for</span>(<span class="keyword">int</span> i = level - <span class="number">1</span>; i &gt;= <span class="number">0</span>; i--) &#123;</span><br><span class="line">			<span class="keyword">while</span>(curNode.forward[i].key &lt; key) &#123;</span><br><span class="line">				curNode = curNode.forward[i];</span><br><span class="line">			&#125;</span><br><span class="line">			update[i] = curNode;</span><br><span class="line">		&#125;</span><br><span class="line">		curNode = curNode.forward[<span class="number">0</span>];</span><br><span class="line">		<span class="keyword">if</span>(curNode.key != key)</span><br><span class="line">			<span class="keyword">return</span>;</span><br><span class="line">		<span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; level; i++) &#123;</span><br><span class="line">			<span class="keyword">if</span>(update[i].forward[i] != curNode)</span><br><span class="line">				<span class="keyword">break</span>;</span><br><span class="line">			update[i].forward[i] = curNode.forward[i];</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">while</span>(level &gt; <span class="number">0</span> &amp;&amp; head.forward[level - <span class="number">1</span>] == tail)</span><br><span class="line">			level--;</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	<span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">randomLevel</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">int</span> lvl = <span class="number">1</span>;</span><br><span class="line">		<span class="keyword">while</span>(lvl &lt; MAX_LEVEL &amp;&amp; Math.random() &lt; P) &#123;</span><br><span class="line">			lvl++;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> lvl;</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">print</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = level - <span class="number">1</span>; i &gt;= <span class="number">0</span>; i--) &#123;</span><br><span class="line">            SkipListNode curNode = head.forward[i];</span><br><span class="line">            <span class="keyword">while</span> (curNode != tail) &#123;</span><br><span class="line">                System.out.print(curNode.key + <span class="string">"-&gt;"</span> );</span><br><span class="line">                curNode = curNode.forward[i];</span><br><span class="line">            &#125;</span><br><span class="line">            System.out.println(<span class="string">"NIL"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">	     SkipList sl = <span class="keyword">new</span> SkipList(<span class="number">10</span>, <span class="number">0.5</span>);</span><br><span class="line">	        sl.insert(<span class="number">20</span>, <span class="string">"A"</span>);</span><br><span class="line">	        sl.insert(<span class="number">5</span>, <span class="string">"B"</span>);</span><br><span class="line">	        sl.insert(<span class="number">10</span>, <span class="string">"C"</span>);</span><br><span class="line">	        sl.insert(<span class="number">80</span>, <span class="string">"F"</span>);</span><br><span class="line">	        sl.insert(<span class="number">60</span>, <span class="string">"G"</span>);</span><br><span class="line">	        sl.insert(<span class="number">30</span>, <span class="string">"H"</span>);</span><br><span class="line">	        System.out.println(<span class="string">"level: "</span> + sl.level);</span><br><span class="line">	        sl.print();</span><br><span class="line">	        System.out.println(<span class="string">"-----------------------------"</span>);</span><br><span class="line">	        sl.delete(<span class="number">20</span>);</span><br><span class="line">	        System.out.println(<span class="string">"level: "</span> + sl.level);</span><br><span class="line">	        sl.print();</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+    
+  </div>
+  <footer>
+    
+      
+      
+    
+  </footer>
+</article>
+
+
+</div>
+  </div>
+  <footer id="footer"><div class="footer-mask"></div>
+<div class="copyright">
+  &copy; 2018
+  
+    <a href="/">Dorothy Zhang</a>
+  
+  <div class="heartbeat"></div><div class="heartbeat"></div>
+  <div class="heartbeat float"></div>
+</div>
+<script>
+  // heartbeart forcetouch
+  var heartEl1 = document.querySelector('.heartbeat:first-of-type')
+  var heartEl2 = document.querySelector('.heartbeat:nth-child(3)')
+  var heartFloat = document.querySelector('.heartbeat.float')
+
+  function prepareForForceClick(event) {
+    event.preventDefault();
+  }
+
+  function enterForceClick(event) {
+  }
+
+  function endForceClick(event) {
+    heartFloat.style.transform = 'scale(0)';
+  }
+
+  function forceChanged(event) {
+    heartFloat.style.transform = 'scale(' + 8*event.webkitForce + ')';
+  }
+
+  function setupForceClickBehavior(someElement)
+  {
+    someElement.addEventListener("webkitmouseforcewillbegin", prepareForForceClick, false);
+    someElement.addEventListener("webkitmouseforcedown", enterForceClick, false);
+    someElement.addEventListener("webkitmouseforceup", endForceClick, false);
+    someElement.addEventListener("webkitmouseforcechanged", forceChanged, false);
+  }
+
+  setupForceClickBehavior(heartEl1);
+  setupForceClickBehavior(heartEl2);
+
+  heartFloat.addEventListener('click', function(){
+    heartFloat.style.transform = 'scale(0)'
+  }, false)
+</script>
+</footer>
+  <script src="//cdn.bootcss.com/jquery/2.2.1/jquery.min.js"></script>
+<script src="/js/scale.fix.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+  (function($){
+    $('.fancybox').fancybox();
+  })(jQuery);
+</script>
+
+
+  <div class="footer-mask"></div>
+</body>
+</html>
