@@ -4,34 +4,30 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="chrome=1">
   
-  <title>DOROTHY</title>
+  <title>Leveldb源码学习系列(一) Memtable分析 | DOROTHY</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   
     <meta name="author" content="Dorothy Zhang">
   
   
-    <meta name="description" content="title: Leveldb源码学习系列(一) Memtable分析date: 2018-7-30 23:51:11categories: 技术tags: leveldb
-—Leveldb在插入一条记录时首先会将插入操作计入日志文件，然后写入内存中的Memtable中，将写操作写入内存可以降低随机写消耗的时间，但同时读的复杂度会相应的增大。本节主要学习Memtable的数据结构，以及存储细节。
-1">
+    <meta name="description" content="Leveldb在插入一条记录时首先会将插入操作计入日志文件，然后写入内存中的Memtable中，将写操作写入内存可以降低随机写消耗的时间，但同时读的复杂度会相应的增大。本节主要学习Memtable的数据结构，以及存储细节。
+1. Memtable中的各种Key如图所示，Memtable中主要有如下四种Key，分别为user_key, Internal_key, Lookup_key以及Memtab">
   
-  <meta name="description" content="title: Leveldb源码学习系列(一) Memtable分析date: 2018-7-30 23:51:11categories: 技术tags: leveldb
-—Leveldb在插入一条记录时首先会将插入操作计入日志文件，然后写入内存中的Memtable中，将写操作写入内存可以降低随机写消耗的时间，但同时读的复杂度会相应的增大。本节主要学习Memtable的数据结构，以及存储细节。
-1">
+  <meta name="description" content="Leveldb在插入一条记录时首先会将插入操作计入日志文件，然后写入内存中的Memtable中，将写操作写入内存可以降低随机写消耗的时间，但同时读的复杂度会相应的增大。本节主要学习Memtable的数据结构，以及存储细节。
+1. Memtable中的各种Key如图所示，Memtable中主要有如下四种Key，分别为user_key, Internal_key, Lookup_key以及Memtab">
 <meta property="og:type" content="article">
-<meta property="og:title" content="DOROTHY">
+<meta property="og:title" content="Leveldb源码学习系列(一) Memtable分析">
 <meta property="og:url" content="http://yoursite.com/2018/07/30/Leveldb源码学习系列(一) Memtable分析/index.html">
 <meta property="og:site_name" content="DOROTHY">
-<meta property="og:description" content="title: Leveldb源码学习系列(一) Memtable分析date: 2018-7-30 23:51:11categories: 技术tags: leveldb
-—Leveldb在插入一条记录时首先会将插入操作计入日志文件，然后写入内存中的Memtable中，将写操作写入内存可以降低随机写消耗的时间，但同时读的复杂度会相应的增大。本节主要学习Memtable的数据结构，以及存储细节。
-1">
+<meta property="og:description" content="Leveldb在插入一条记录时首先会将插入操作计入日志文件，然后写入内存中的Memtable中，将写操作写入内存可以降低随机写消耗的时间，但同时读的复杂度会相应的增大。本节主要学习Memtable的数据结构，以及存储细节。
+1. Memtable中的各种Key如图所示，Memtable中主要有如下四种Key，分别为user_key, Internal_key, Lookup_key以及Memtab">
 <meta property="og:image" content="http://7xoxkx.com1.z0.glb.clouddn.com/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-07-30%20%E4%B8%8B%E5%8D%8811.51.49.png">
 <meta property="og:image" content="http://7xoxkx.com1.z0.glb.clouddn.com/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-07-30%20%E4%B8%8B%E5%8D%8811.53.10.png">
-<meta property="og:updated_time" content="2018-07-30T15:56:22.449Z">
+<meta property="og:updated_time" content="2018-07-30T16:00:11.099Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="DOROTHY">
-<meta name="twitter:description" content="title: Leveldb源码学习系列(一) Memtable分析date: 2018-7-30 23:51:11categories: 技术tags: leveldb
-—Leveldb在插入一条记录时首先会将插入操作计入日志文件，然后写入内存中的Memtable中，将写操作写入内存可以降低随机写消耗的时间，但同时读的复杂度会相应的增大。本节主要学习Memtable的数据结构，以及存储细节。
-1">
+<meta name="twitter:title" content="Leveldb源码学习系列(一) Memtable分析">
+<meta name="twitter:description" content="Leveldb在插入一条记录时首先会将插入操作计入日志文件，然后写入内存中的Memtable中，将写操作写入内存可以降低随机写消耗的时间，但同时读的复杂度会相应的增大。本节主要学习Memtable的数据结构，以及存储细节。
+1. Memtable中的各种Key如图所示，Memtable中主要有如下四种Key，分别为user_key, Internal_key, Lookup_key以及Memtab">
   
   
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -68,12 +64,12 @@
   <header>
     
   
-    <h1 class="title"></h1>
+    <h1 class="title">Leveldb源码学习系列(一) Memtable分析</h1>
   
 
     
       <a href="/2018/07/30/Leveldb源码学习系列(一) Memtable分析/">
-  <time datetime="2018-07-30T15:56:22.773Z">
+  <time datetime="2018-07-30T15:51:11.000Z">
     2018-07-30
   </time>
 </a>
@@ -82,8 +78,7 @@
   
   <div class="entry">
     
-      <p>title: Leveldb源码学习系列(一) Memtable分析<br>date: 2018-7-30 23:51:11<br>categories: 技术<br>tags: leveldb</p>
-<h2 id="—">—</h2><p>Leveldb在插入一条记录时首先会将插入操作计入日志文件，然后写入内存中的Memtable中，将写操作写入内存可以降低随机写消耗的时间，但同时读的复杂度会相应的增大。本节主要学习Memtable的数据结构，以及存储细节。</p>
+      <p>Leveldb在插入一条记录时首先会将插入操作计入日志文件，然后写入内存中的Memtable中，将写操作写入内存可以降低随机写消耗的时间，但同时读的复杂度会相应的增大。本节主要学习Memtable的数据结构，以及存储细节。</p>
 <h3 id="1-_Memtable中的各种Key">1. Memtable中的各种Key</h3><p>如图所示，Memtable中主要有如下四种Key，分别为user_key, Internal_key, Lookup_key以及Memtable_key。user_key是用户传入的key，Internal_key是指加入SequenceNum和ValueType的Key，ValueType有两种，一种是正常的插入值，一种是删除值，表示此次该key需要被删除。Mem_entry表示实际插入到Memtable中的值。</p>
 <p><img src="http://7xoxkx.com1.z0.glb.clouddn.com/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-07-30%20%E4%B8%8B%E5%8D%8811.51.49.png" alt=""></p>
 <a id="more"></a>
@@ -120,7 +115,15 @@
   <footer>
     
       
+  <div class="categories">
+    <a class="categories-link" href="/categories/技术/">技术</a>
+  </div>
+
       
+  <div class="tags">
+    <a class="tags-link" href="/tags/leveldb/">leveldb</a>
+  </div>
+
     
   </footer>
 </article>

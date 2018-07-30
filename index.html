@@ -61,12 +61,12 @@
   <header>
     
   
-    <h1 class="title"><a href="/2018/07/30/Leveldb源码学习系列(一) Memtable分析/"></a></h1>
+    <h1 class="title"><a href="/2018/07/30/Leveldb源码学习系列(一) Memtable分析/">Leveldb源码学习系列(一) Memtable分析</a></h1>
   
 
     
       <a href="/2018/07/30/Leveldb源码学习系列(一) Memtable分析/">
-  <time datetime="2018-07-30T15:56:22.773Z">
+  <time datetime="2018-07-30T15:51:11.000Z">
     2018-07-30
   </time>
 </a>
@@ -75,8 +75,7 @@
   
   <div class="entry">
     
-      <p>title: Leveldb源码学习系列(一) Memtable分析<br>date: 2018-7-30 23:51:11<br>categories: 技术<br>tags: leveldb</p>
-<h2 id="—">—</h2><p>Leveldb在插入一条记录时首先会将插入操作计入日志文件，然后写入内存中的Memtable中，将写操作写入内存可以降低随机写消耗的时间，但同时读的复杂度会相应的增大。本节主要学习Memtable的数据结构，以及存储细节。</p>
+      <p>Leveldb在插入一条记录时首先会将插入操作计入日志文件，然后写入内存中的Memtable中，将写操作写入内存可以降低随机写消耗的时间，但同时读的复杂度会相应的增大。本节主要学习Memtable的数据结构，以及存储细节。</p>
 <h3 id="1-_Memtable中的各种Key">1. Memtable中的各种Key</h3><p>如图所示，Memtable中主要有如下四种Key，分别为user_key, Internal_key, Lookup_key以及Memtable_key。user_key是用户传入的key，Internal_key是指加入SequenceNum和ValueType的Key，ValueType有两种，一种是正常的插入值，一种是删除值，表示此次该key需要被删除。Mem_entry表示实际插入到Memtable中的值。</p>
 <p><img src="http://7xoxkx.com1.z0.glb.clouddn.com/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-07-30%20%E4%B8%8B%E5%8D%8811.51.49.png" alt=""></p>
     
