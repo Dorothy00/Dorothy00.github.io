@@ -1,0 +1,196 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  
+  <title>DOROTHY</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  
+    <meta name="author" content="Dorothy Zhang">
+  
+  
+    <meta name="description" content="title: Leveldb源码学习系列(一) Memtable分析date: 2018-7-30 23:51:11categories: 技术tags: leveldb
+—Leveldb在插入一条记录时首先会将插入操作计入日志文件，然后写入内存中的Memtable中，将写操作写入内存可以降低随机写消耗的时间，但同时读的复杂度会相应的增大。本节主要学习Memtable的数据结构，以及存储细节。
+1">
+  
+  <meta name="description" content="title: Leveldb源码学习系列(一) Memtable分析date: 2018-7-30 23:51:11categories: 技术tags: leveldb
+—Leveldb在插入一条记录时首先会将插入操作计入日志文件，然后写入内存中的Memtable中，将写操作写入内存可以降低随机写消耗的时间，但同时读的复杂度会相应的增大。本节主要学习Memtable的数据结构，以及存储细节。
+1">
+<meta property="og:type" content="article">
+<meta property="og:title" content="DOROTHY">
+<meta property="og:url" content="http://yoursite.com/2018/07/30/Leveldb源码学习系列(一) Memtable分析/index.html">
+<meta property="og:site_name" content="DOROTHY">
+<meta property="og:description" content="title: Leveldb源码学习系列(一) Memtable分析date: 2018-7-30 23:51:11categories: 技术tags: leveldb
+—Leveldb在插入一条记录时首先会将插入操作计入日志文件，然后写入内存中的Memtable中，将写操作写入内存可以降低随机写消耗的时间，但同时读的复杂度会相应的增大。本节主要学习Memtable的数据结构，以及存储细节。
+1">
+<meta property="og:image" content="http://7xoxkx.com1.z0.glb.clouddn.com/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-07-30%20%E4%B8%8B%E5%8D%8811.51.49.png">
+<meta property="og:image" content="http://7xoxkx.com1.z0.glb.clouddn.com/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-07-30%20%E4%B8%8B%E5%8D%8811.53.10.png">
+<meta property="og:updated_time" content="2018-07-30T15:56:22.449Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="DOROTHY">
+<meta name="twitter:description" content="title: Leveldb源码学习系列(一) Memtable分析date: 2018-7-30 23:51:11categories: 技术tags: leveldb
+—Leveldb在插入一条记录时首先会将插入操作计入日志文件，然后写入内存中的Memtable中，将写操作写入内存可以降低随机写消耗的时间，但同时读的复杂度会相应的增大。本节主要学习Memtable的数据结构，以及存储细节。
+1">
+  
+  
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+</head>
+
+<body>
+  <header id="header">
+  <div class="title-wrapper">
+    <div class="title">
+      <h1><a href="/">DOROTHY</a></h1>
+      <p><a href="/"></a></p>
+    </div>
+  </div>
+</header>
+<nav class="nav">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+      <li><a href="/about">About</a></li>
+    
+    
+  </ul>
+</nav>
+
+  <div class="wrapper">
+    <div class="content"><article class="post">
+  <header>
+    
+  
+    <h1 class="title"></h1>
+  
+
+    
+      <a href="/2018/07/30/Leveldb源码学习系列(一) Memtable分析/">
+  <time datetime="2018-07-30T15:56:22.773Z">
+    2018-07-30
+  </time>
+</a>
+    
+  </header>
+  
+  <div class="entry">
+    
+      <p>title: Leveldb源码学习系列(一) Memtable分析<br>date: 2018-7-30 23:51:11<br>categories: 技术<br>tags: leveldb</p>
+<h2 id="—">—</h2><p>Leveldb在插入一条记录时首先会将插入操作计入日志文件，然后写入内存中的Memtable中，将写操作写入内存可以降低随机写消耗的时间，但同时读的复杂度会相应的增大。本节主要学习Memtable的数据结构，以及存储细节。</p>
+<h3 id="1-_Memtable中的各种Key">1. Memtable中的各种Key</h3><p>如图所示，Memtable中主要有如下四种Key，分别为user_key, Internal_key, Lookup_key以及Memtable_key。user_key是用户传入的key，Internal_key是指加入SequenceNum和ValueType的Key，ValueType有两种，一种是正常的插入值，一种是删除值，表示此次该key需要被删除。Mem_entry表示实际插入到Memtable中的值。</p>
+<p><img src="http://7xoxkx.com1.z0.glb.clouddn.com/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-07-30%20%E4%B8%8B%E5%8D%8811.51.49.png" alt=""></p>
+<a id="more"></a>
+<h3 id="2-_类图结构">2. 类图结构</h3><p>Memtable的类图结构如下：</p>
+<p><img src="http://7xoxkx.com1.z0.glb.clouddn.com/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-07-30%20%E4%B8%8B%E5%8D%8811.53.10.png" alt=""></p>
+<h3 id="3-_源码分析">3. 源码分析</h3><p>从类图中可以看出，memtable中主要的操作为Add和Get，下面着重分析这两个方法的内部实现：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> MemTable::Add(SequenceNumber s, ValueType type,</span><br><span class="line">                   <span class="keyword">const</span> Slice&amp; key,</span><br><span class="line">                   <span class="keyword">const</span> Slice&amp; value) &#123; </span><br><span class="line">  <span class="comment">// Format of an entry is concatenation of:</span></span><br><span class="line">  <span class="comment">//  key_size     : varint32 of internal_key.size()</span></span><br><span class="line">  <span class="comment">//  key bytes    : char[internal_key.size()]</span></span><br><span class="line">  <span class="comment">//  value_size   : varint32 of value.size()</span></span><br><span class="line">  <span class="comment">//  value bytes  : char[value.size()]</span></span><br><span class="line">  <span class="comment">// 从注释可以看出插入到memtable中的一条记录的数据结构为：</span></span><br><span class="line">  <span class="comment">//（Internal_length(varint32) |user_key(string) | seq_num(7B) | valueType(1B) | value_length(varint32) | value(string)）</span></span><br><span class="line">  <span class="keyword">size_t</span> key_size = key.size();</span><br><span class="line">  <span class="keyword">size_t</span> val_size = value.size();</span><br><span class="line">  <span class="keyword">size_t</span> internal_key_size = key_size + <span class="number">8</span>;</span><br><span class="line">  <span class="keyword">const</span> <span class="keyword">size_t</span> encoded_len =</span><br><span class="line">      VarintLength(internal_key_size) + internal_key_size +</span><br><span class="line">      VarintLength(val_size) + val_size; <span class="comment">//一条记录总共需要的字节数</span></span><br><span class="line">  <span class="keyword">char</span>* buf = arena_.Allocate(encoded_len);<span class="comment">//通过内存池分配大小为encoded_len的内存</span></span><br><span class="line">  <span class="keyword">char</span>* p = EncodeVarint32(buf, internal_key_size);<span class="comment">//在内存中写入internal_key_size，格式为varint32</span></span><br><span class="line">  <span class="built_in">memcpy</span>(p, key.data(), key_size); <span class="comment">//将user_key写入内存</span></span><br><span class="line">  p += key_size; <span class="comment">// 移动指针</span></span><br><span class="line">  EncodeFixed64(p, (s &lt;&lt; <span class="number">8</span>) | type); <span class="comment">// 在内存中写入8个字节数据，前7字节为seq_num,最后一个字节为type</span></span><br><span class="line">  p += <span class="number">8</span>;</span><br><span class="line">  p = EncodeVarint32(p, val_size);<span class="comment">// 将value_size写入</span></span><br><span class="line">  <span class="built_in">memcpy</span>(p, value.data(), val_size); <span class="comment">//将value值写入</span></span><br><span class="line">  assert((p + val_size) - buf == encoded_len);</span><br><span class="line">  table_.Insert(buf); <span class="comment">//最后插入table中</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看出<code>Add()</code>函数还是比较简单的，就是将记录按照一定的格式写入内存。这里需要了解<code>VarintLength</code>、<code>EncodeVarint32</code>以及<code>EncodeFixed64</code>等工具函数的实现细节。另外，最后一句代码是将buf插入到table中，memtable中table的定义为：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> SkipList&lt;<span class="keyword">const</span> <span class="keyword">char</span>*, KeyComparator&gt; Table;</span><br></pre></td></tr></table></figure>
+<p>可以看出table的具体实现为一个<code>SkipList</code>，关于SkipList的原理可以参考<a href="ftp://ftp.cs.umd.edu/pub/skipLists/skiplists.pdf" target="_blank" rel="external">SkipList论文</a>。这里不再详细说明了。</p>
+<p>下面分析<code>Get(const LookupKey&amp; key, std::string* value, Status* s)</code>函数实现：</p>
+<p><code>Get(const LookupKey&amp; key, std::string* value, Status* s)</code>传入的key是一个LookupKey，我们首先看下LookupKey的实现：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> LookupKey &#123;</span><br><span class="line"> <span class="keyword">public</span>:</span><br><span class="line">  LookupKey(<span class="keyword">const</span> Slice&amp; user_key, SequenceNumber sequence);</span><br><span class="line">  ~LookupKey();</span><br><span class="line">  <span class="function">Slice <span class="title">memtable_key</span><span class="params">()</span> <span class="keyword">const</span> </span>&#123; <span class="keyword">return</span> Slice(start_, end_ - start_); &#125;</span><br><span class="line">  <span class="function">Slice <span class="title">internal_key</span><span class="params">()</span> <span class="keyword">const</span> </span>&#123; <span class="keyword">return</span> Slice(kstart_, end_ - kstart_); &#125;</span><br><span class="line">  <span class="function">Slice <span class="title">user_key</span><span class="params">()</span> <span class="keyword">const</span> </span>&#123; <span class="keyword">return</span> Slice(kstart_, end_ - kstart_ - <span class="number">8</span>); &#125;</span><br><span class="line"></span><br><span class="line"> <span class="keyword">private</span>:</span><br><span class="line">  <span class="comment">// We construct a char array of the form:</span></span><br><span class="line">  <span class="comment">//    klength  varint32               &lt;-- start_</span></span><br><span class="line">  <span class="comment">//    userkey  char[klength]          &lt;-- kstart_</span></span><br><span class="line">  <span class="comment">//    tag      uint64</span></span><br><span class="line">  <span class="comment">//                                    &lt;-- end_</span></span><br><span class="line">  <span class="comment">// The array is a suitable MemTable key.</span></span><br><span class="line">  <span class="comment">// The suffix starting with "userkey" can be used as an InternalKey.</span></span><br><span class="line">  <span class="keyword">const</span> <span class="keyword">char</span>* start_;</span><br><span class="line">  <span class="keyword">const</span> <span class="keyword">char</span>* kstart_;</span><br><span class="line">  <span class="keyword">const</span> <span class="keyword">char</span>* end_;</span><br><span class="line">  <span class="keyword">char</span> space_[<span class="number">200</span>];      <span class="comment">// Avoid allocation for short keys</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">inline</span> LookupKey::~LookupKey() &#123;</span><br><span class="line">  <span class="keyword">if</span> (start_ != space_) <span class="keyword">delete</span>[] start_;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">LookupKey::LookupKey(<span class="keyword">const</span> Slice&amp; user_key, SequenceNumber s) &#123;</span><br><span class="line">  <span class="keyword">size_t</span> usize = user_key.size();</span><br><span class="line">  <span class="keyword">size_t</span> needed = usize + <span class="number">13</span>;  <span class="comment">// A conservative estimate</span></span><br><span class="line">  <span class="keyword">char</span>* dst;</span><br><span class="line">  <span class="keyword">if</span> (needed &lt;= <span class="keyword">sizeof</span>(space_)) &#123;</span><br><span class="line">    dst = space_;</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    dst = <span class="keyword">new</span> <span class="keyword">char</span>[needed];</span><br><span class="line">  &#125;</span><br><span class="line">  start_ = dst;</span><br><span class="line">  dst = EncodeVarint32(dst, usize + <span class="number">8</span>); <span class="comment">//internal_key的size为 usize+8</span></span><br><span class="line">  kstart_ = dst; <span class="comment">// internal_key开始的地方</span></span><br><span class="line">  <span class="built_in">memcpy</span>(dst, user_key.data(), usize);</span><br><span class="line">  dst += usize; </span><br><span class="line">  EncodeFixed64(dst, PackSequenceAndType(s, kValueTypeForSeek));</span><br><span class="line">  dst += <span class="number">8</span>;</span><br><span class="line">  end_ = dst;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>LookupKey主要封装了length、userkey和tag，tag由seqnumber和valuetype组成。他将数据按(klength(varint32) | userkey(string) | seq_num(7B) | tag(1B) )的格式写入一个char*中，并提供了<code>memtable_key()</code>、<code>internal_key()</code> 、<code>user_key()</code>三个函数来返回相应的Key。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">bool</span> MemTable::Get(<span class="keyword">const</span> LookupKey&amp; key, <span class="built_in">std</span>::<span class="built_in">string</span>* value, Status* s) &#123;</span><br><span class="line">  Slice memkey = key.memtable_key();</span><br><span class="line">  Table::<span class="function">Iterator <span class="title">iter</span><span class="params">(&amp;table_)</span></span>;</span><br><span class="line">  iter.Seek(memkey.data()); <span class="comment">//下面会分析具体的查找过程</span></span><br><span class="line">  <span class="keyword">if</span> (iter.Valid()) &#123;</span><br><span class="line">    <span class="comment">// entry format is:</span></span><br><span class="line">    <span class="comment">//    klength  varint32</span></span><br><span class="line">    <span class="comment">//    userkey  char[klength]</span></span><br><span class="line">    <span class="comment">//    tag      uint64</span></span><br><span class="line">    <span class="comment">//    vlength  varint32</span></span><br><span class="line">    <span class="comment">//    value    char[vlength]</span></span><br><span class="line">    <span class="comment">// Check that it belongs to same user key.  We do not check the</span></span><br><span class="line">    <span class="comment">// sequence number since the Seek() call above should have skipped</span></span><br><span class="line">    <span class="comment">// all entries with overly large sequence numbers.</span></span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">char</span>* entry = iter.key(); <span class="comment">//得到mem_entry</span></span><br><span class="line">    <span class="keyword">uint32_t</span> key_length;</span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">char</span>* key_ptr = GetVarint32Ptr(entry, entry+<span class="number">5</span>, &amp;key_length); <span class="comment">//解析出key_length</span></span><br><span class="line">    <span class="keyword">if</span> (comparator_.comparator.user_comparator()-&gt;Compare(</span><br><span class="line">            Slice(key_ptr, key_length - <span class="number">8</span>),</span><br><span class="line">            key.user_key()) == <span class="number">0</span>) &#123; <span class="comment">//下面会分析具体的比较过程，这里，如果找到的mem_entry中的user_key和传入的相等，说明找到了</span></span><br><span class="line">      <span class="comment">// Correct user key</span></span><br><span class="line">      <span class="keyword">const</span> <span class="keyword">uint64_t</span> tag = DecodeFixed64(key_ptr + key_length - <span class="number">8</span>); <span class="comment">//解析出seq_num和valuetype</span></span><br><span class="line">      <span class="keyword">switch</span> (<span class="keyword">static_cast</span>&lt;ValueType&gt;(tag &amp; <span class="number">0xff</span>)) &#123; <span class="comment">//取tag的最后8位即是valuetype</span></span><br><span class="line">        <span class="keyword">case</span> kTypeValue: &#123;</span><br><span class="line">          Slice v = GetLengthPrefixedSlice(key_ptr + key_length); <span class="comment">//跳过user_key、seq_num和tag，获取value值</span></span><br><span class="line">          value-&gt;assign(v.data(), v.size());</span><br><span class="line">          <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">case</span> kTypeDeletion:  <span class="comment">// 如果type是kTypeDeletion，表示该条记录已经被删除了，返回NotFound</span></span><br><span class="line">          *s = Status::NotFound(Slice());</span><br><span class="line">          <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>从上面的源代码可以看出<code>Get()</code>函数的主要过程在于寻找和解析，解析过程上面注释说的比较清楚了，下面分析寻找key的过程该过程主要涉及的代码为：<code>iter.Seek(memkey.data())</code>, 由<code>iter</code>的定义可以知道，<code>iter</code>为<code>Table::Iterator</code>类型，而<code>Table</code>又是<code>SkipList&lt;const char*, KeyComparator&gt;</code>类型，所以我们在<code>skiplist.h</code>中查看Seek的具体实现代码：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">inline</span> <span class="keyword">void</span> SkipList&lt;Key,Comparator&gt;::Iterator::Seek(<span class="keyword">const</span> Key&amp; target) &#123;</span><br><span class="line">  node_ = list_-&gt;FindGreaterOrEqual(target, <span class="literal">NULL</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">typename</span> SkipList&lt;Key,Comparator&gt;::Node* SkipList&lt;Key,Comparator&gt;::FindGreaterOrEqual(<span class="keyword">const</span> Key&amp; key, Node** prev)</span><br><span class="line">    <span class="keyword">const</span> &#123;</span><br><span class="line">  Node* x = head_;</span><br><span class="line">  <span class="keyword">int</span> level = GetMaxHeight() - <span class="number">1</span>;</span><br><span class="line">  <span class="keyword">while</span> (<span class="literal">true</span>) &#123;</span><br><span class="line">    Node* next = x-&gt;Next(level);</span><br><span class="line">    <span class="keyword">if</span> (KeyIsAfterNode(key, next)) &#123;</span><br><span class="line">      <span class="comment">// Keep searching in this list</span></span><br><span class="line">      x = next;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="keyword">if</span> (prev != <span class="literal">NULL</span>) prev[level] = x;</span><br><span class="line">      <span class="keyword">if</span> (level == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> next;</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// Switch to next list</span></span><br><span class="line">        level--;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看出<code>seek</code>方法将寻找任务交给了<code>skiplist</code>的<code>FindGreaterOrEqual</code>方法，而<code>FindGreaterOrEqual</code>方法的具体实现思想就是<code>skiplist</code>的<code>search</code>方法，这里不再赘述。</p>
+<p>下面再来分析一下<code>Get()</code>中的<code>if (comparator_.comparator.user_comparator()-&gt;Compare( Slice(key_ptr, key_length - 8), key.user_key()) == 0)</code>代码段：</p>
+<p>首先看下<code>comparator_</code>的类型：<code>Memtable::KeyComparator comparator_</code>, 由<code>keyComparator</code>的构造函数<code>explicit KeyComparator(const InternalKeyComparator&amp; c) : comparator(c) { }</code>可知，<code>comparator_.comparator</code>的类型为InternalKeyComparator，由于<code>InternalKeyComparator</code>继承自<code>Comparator</code>， 而<code>Compare()</code>又是一个虚函数，因此<code>user_comparator()-&gt;Compare()</code>方法会调用<code>InternalKeyComparator</code>的<code>int Compare(const Slice&amp; a, const Slice&amp; b)</code>方法，我们再来看下这个方法的具体实现：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> InternalKeyComparator::Compare(<span class="keyword">const</span> Slice&amp; akey, <span class="keyword">const</span> Slice&amp; bkey) <span class="keyword">const</span> &#123;</span><br><span class="line">  <span class="comment">// Order by:</span></span><br><span class="line">  <span class="comment">//    increasing user key (according to user-supplied comparator)</span></span><br><span class="line">  <span class="comment">//    decreasing sequence number</span></span><br><span class="line">  <span class="comment">//    decreasing type (though sequence# should be enough to disambiguate)</span></span><br><span class="line">  <span class="keyword">int</span> r = user_comparator_-&gt;Compare(ExtractUserKey(akey), ExtractUserKey(bkey)); <span class="comment">// 先比较user_key</span></span><br><span class="line">  <span class="keyword">if</span> (r == <span class="number">0</span>) &#123;</span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">uint64_t</span> anum = DecodeFixed64(akey.data() + akey.size() - <span class="number">8</span>);</span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">uint64_t</span> bnum = DecodeFixed64(bkey.data() + bkey.size() - <span class="number">8</span>);</span><br><span class="line">    <span class="keyword">if</span> (anum &gt; bnum) &#123; <span class="comment">// 再比较seq_num, 这里不将seq_num和valuetype拆分开，个人理解是因为当valuetype不相同时，key也一定不会相同，所以就直接比较了。</span></span><br><span class="line">      r = -<span class="number">1</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (anum &lt; bnum) &#123;</span><br><span class="line">      r = +<span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> r;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看出比较两个key大小时，首先比较user_key，然后比较seq_num。</p>
+<p>至此，Memtable就分析完了，本篇主要详细说明了memtable的<code>Add()</code>和<code>Get()</code>过程，其中涉及到的其他未分析的知识点有：</p>
+<ol>
+<li><p><code>skiplist</code>的结构</p>
+</li>
+<li><p>varint32原理</p>
+</li>
+</ol>
+<p>由于文章主要在于分析思想，一些工具函数就不细说了。</p>
+
+    
+  </div>
+  <footer>
+    
+      
+      
+    
+  </footer>
+</article>
+
+
+</div>
+  </div>
+  <footer id="footer"><div class="footer-mask"></div>
+<div class="copyright">
+  &copy; 2018
+  
+    <a href="/">Dorothy Zhang</a>
+  
+  <div class="heartbeat"></div><div class="heartbeat"></div>
+  <div class="heartbeat float"></div>
+</div>
+<script>
+  // heartbeart forcetouch
+  var heartEl1 = document.querySelector('.heartbeat:first-of-type')
+  var heartEl2 = document.querySelector('.heartbeat:nth-child(3)')
+  var heartFloat = document.querySelector('.heartbeat.float')
+
+  function prepareForForceClick(event) {
+    event.preventDefault();
+  }
+
+  function enterForceClick(event) {
+  }
+
+  function endForceClick(event) {
+    heartFloat.style.transform = 'scale(0)';
+  }
+
+  function forceChanged(event) {
+    heartFloat.style.transform = 'scale(' + 8*event.webkitForce + ')';
+  }
+
+  function setupForceClickBehavior(someElement)
+  {
+    someElement.addEventListener("webkitmouseforcewillbegin", prepareForForceClick, false);
+    someElement.addEventListener("webkitmouseforcedown", enterForceClick, false);
+    someElement.addEventListener("webkitmouseforceup", endForceClick, false);
+    someElement.addEventListener("webkitmouseforcechanged", forceChanged, false);
+  }
+
+  setupForceClickBehavior(heartEl1);
+  setupForceClickBehavior(heartEl2);
+
+  heartFloat.addEventListener('click', function(){
+    heartFloat.style.transform = 'scale(0)'
+  }, false)
+</script>
+</footer>
+  <script src="//cdn.bootcss.com/jquery/2.2.1/jquery.min.js"></script>
+<script src="/js/scale.fix.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+  (function($){
+    $('.fancybox').fancybox();
+  })(jQuery);
+</script>
+
+
+  <div class="footer-mask"></div>
+</body>
+</html>
