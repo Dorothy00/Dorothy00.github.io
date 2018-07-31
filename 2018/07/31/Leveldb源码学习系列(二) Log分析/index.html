@@ -24,7 +24,7 @@ checksum(4B) |">
 <meta property="og:description" content="Leveldb在将数据写入memtable之前会首先进行WAL操作，即记录日志。这样即使内存中的数据丢失，也可以即使恢复过来。本节将分析Log的写入和读取过程。
 1. Log文件的格式Leveldb的log文件以block为单位进行划分，每个block的大小默认为32KB，每个block中存储了多个record，一个record就是一条记录操作。record的格式为：
 checksum(4B) |">
-<meta property="og:updated_time" content="2018-07-31T15:49:44.068Z">
+<meta property="og:updated_time" content="2018-07-31T15:51:46.634Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Leveldb源码学习系列(二) Log分析">
 <meta name="twitter:description" content="Leveldb在将数据写入memtable之前会首先进行WAL操作，即记录日志。这样即使内存中的数据丢失，也可以即使恢复过来。本节将分析Log的写入和读取过程。
@@ -91,7 +91,7 @@ checksum(4B) |">
 <li>kMiddleType</li>
 <li>kLastType</li>
 </ul>
-<p>如果一条记录的大小小于32KB，那么就可以存放在一个block中，该条记录类型就是kFullType；如果记录在一个block中放不下，那么就要拆分成多个record进行存放，其中第一个record的type是kFirstType，中间的是kMiddleType，最后一个record的类型是kLastType。</p>
+<p>如果一条记录的大小小于32KB，那么就可以存放在一个block中，该条记录类型就是kFullType；如果记录在一个block中放不下，那么就要拆分成多个record进行存放，其中第一个record的type是kFirstType，中间的是kMiddleType，最后一个record的类型是kLastType。<br><a id="more"></a></p>
 <h3 id="2-_Log文件的写过程">2. Log文件的写过程</h3><p>读log主要涉及两个文件：</p>
 <p>log_writer.h</p>
 <p>log_writer.cc</p>
