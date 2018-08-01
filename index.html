@@ -61,6 +61,50 @@
   <header>
     
   
+    <h1 class="title"><a href="/2018/08/01/Leveldb源码学习系列(三) Block分析/">Leveldb源码学习系列(三) Block分析</a></h1>
+  
+
+    
+      <a href="/2018/08/01/Leveldb源码学习系列(三) Block分析/">
+  <time datetime="2018-08-01T15:24:11.000Z">
+    2018-08-01
+  </time>
+</a>
+    
+  </header>
+  
+  <div class="entry">
+    
+      <p>Leveldb的sst主要由data block 、meta block、meta index block、index block以及footer组成。其中data block主要用来存放数据，meta block主要用来存放过滤器， meta index block存放的是meta block的索引，index block存放的是data block的索引， footer中存放了meta index block和index block的索引。本节我们将分析data block的结构以及构建过程。</p>
+<h3 id="1-_data_block的结构">1. data block的结构</h3><ol>
+<li><p>k-v record中存储的是key-value值，记录按照key的顺序进行排序。leveldb为了节省存储空间，每条record的key会使用前缀压缩。具体存储格式如下：</p>
+<p><img src="http://7xoxkx.com1.z0.glb.clouddn.com/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-08-01%20%E4%B8%8B%E5%8D%8810.51.56.png" alt=""></p>
+</li>
+</ol>
+<p>[key中相同部分大小] | [key中不同部分大小] | [value大小] | [key 中不同部分值] | [value值]</p>
+<ol>
+<li><p>使用前缀压缩的缺点是要查找一个key，必须将其之前所有的key全部读取出来，这样显然效率太低。为了解决该问题，leveldb使用restart point方式，每隔16(可配置)个key做一次前缀压缩，这样每次读取key时，最多只要读取16</p>
+    
+  </div>
+  <footer class="end-sep">
+    
+      
+        <div class="alignleft">
+          <a href="/2018/08/01/Leveldb源码学习系列(三) Block分析/#more" class="more-link">阅读全文</a>
+        </div>
+      
+      
+    
+  </footer>
+</article>
+
+
+
+  
+    <article class="post">
+  <header>
+    
+  
     <h1 class="title"><a href="/2018/07/31/Leveldb源码学习系列(二) Log分析/">Leveldb源码学习系列(二) Log分析</a></h1>
   
 
@@ -414,44 +458,6 @@
       
         <div class="alignleft">
           <a href="/2017/12/19/2017年终总结/#more" class="more-link">阅读全文</a>
-        </div>
-      
-      
-    
-  </footer>
-</article>
-
-
-
-  
-    <article class="post">
-  <header>
-    
-  
-    <h1 class="title"><a href="/2017/07/31/Android事件分发过程源码分析/">Android事件分发过程源码分析</a></h1>
-  
-
-    
-      <a href="/2017/07/31/Android事件分发过程源码分析/">
-  <time datetime="2017-07-31T09:04:18.000Z">
-    2017-07-31
-  </time>
-</a>
-    
-  </header>
-  
-  <div class="entry">
-    
-      <blockquote>
-<p>  前言：一直以来对Android事件分发过程都是似懂非懂，知道<code>dispatchtouchEvent</code>是处理事件分发的函数，<code>onInterceptTouchEvent</code>是处理事件拦截的函数，<code>onTouchEvent</code>是消耗事件的函数，但具体的事件流程还是比较模糊。由于最近笔者在准备秋招面试，而Android事件分发过程又是高频题，所以下决心弄懂这个过程，因而有了这篇博文。本文会以笔者在打Log时遇到的问题为出发点，通过一步步阅读源码，最终解决问题，来理清Android中的事件分发过程。</p>
-</blockquote>
-    
-  </div>
-  <footer class="end-sep">
-    
-      
-        <div class="alignleft">
-          <a href="/2017/07/31/Android事件分发过程源码分析/#more" class="more-link">阅读全文</a>
         </div>
       
       

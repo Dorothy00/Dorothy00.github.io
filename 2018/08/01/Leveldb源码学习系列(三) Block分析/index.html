@@ -1,0 +1,185 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  
+  <title>Leveldb源码学习系列(三) Block分析 | DOROTHY</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  
+    <meta name="author" content="Dorothy Zhang">
+  
+  
+    <meta name="description" content="Leveldb的sst主要由data block 、meta block、meta index block、index block以及footer组成。其中data block主要用来存放数据，meta block主要用来存放过滤器， meta index block存放的是meta block的索引，index block存放的是data block的索引， footer中存放了meta ind">
+  
+  <meta name="description" content="Leveldb的sst主要由data block 、meta block、meta index block、index block以及footer组成。其中data block主要用来存放数据，meta block主要用来存放过滤器， meta index block存放的是meta block的索引，index block存放的是data block的索引， footer中存放了meta ind">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Leveldb源码学习系列(三) Block分析">
+<meta property="og:url" content="http://yoursite.com/2018/08/01/Leveldb源码学习系列(三) Block分析/index.html">
+<meta property="og:site_name" content="DOROTHY">
+<meta property="og:description" content="Leveldb的sst主要由data block 、meta block、meta index block、index block以及footer组成。其中data block主要用来存放数据，meta block主要用来存放过滤器， meta index block存放的是meta block的索引，index block存放的是data block的索引， footer中存放了meta ind">
+<meta property="og:image" content="http://7xoxkx.com1.z0.glb.clouddn.com/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-08-01%20%E4%B8%8B%E5%8D%8810.51.56.png">
+<meta property="og:updated_time" content="2018-08-01T15:27:00.095Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Leveldb源码学习系列(三) Block分析">
+<meta name="twitter:description" content="Leveldb的sst主要由data block 、meta block、meta index block、index block以及footer组成。其中data block主要用来存放数据，meta block主要用来存放过滤器， meta index block存放的是meta block的索引，index block存放的是data block的索引， footer中存放了meta ind">
+  
+  
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+</head>
+
+<body>
+  <header id="header">
+  <div class="title-wrapper">
+    <div class="title">
+      <h1><a href="/">DOROTHY</a></h1>
+      <p><a href="/"></a></p>
+    </div>
+  </div>
+</header>
+<nav class="nav">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+      <li><a href="/about">About</a></li>
+    
+    
+  </ul>
+</nav>
+
+  <div class="wrapper">
+    <div class="content"><article class="post">
+  <header>
+    
+  
+    <h1 class="title">Leveldb源码学习系列(三) Block分析</h1>
+  
+
+    
+      <a href="/2018/08/01/Leveldb源码学习系列(三) Block分析/">
+  <time datetime="2018-08-01T15:24:11.000Z">
+    2018-08-01
+  </time>
+</a>
+    
+  </header>
+  
+  <div class="entry">
+    
+      <p>Leveldb的sst主要由data block 、meta block、meta index block、index block以及footer组成。其中data block主要用来存放数据，meta block主要用来存放过滤器， meta index block存放的是meta block的索引，index block存放的是data block的索引， footer中存放了meta index block和index block的索引。本节我们将分析data block的结构以及构建过程。</p>
+<h3 id="1-_data_block的结构">1. data block的结构</h3><ol>
+<li><p>k-v record中存储的是key-value值，记录按照key的顺序进行排序。leveldb为了节省存储空间，每条record的key会使用前缀压缩。具体存储格式如下：</p>
+<p><img src="http://7xoxkx.com1.z0.glb.clouddn.com/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-08-01%20%E4%B8%8B%E5%8D%8810.51.56.png" alt=""></p>
+</li>
+</ol>
+<p>[key中相同部分大小] | [key中不同部分大小] | [value大小] | [key 中不同部分值] | [value值]</p>
+<ol>
+<li><p>使用前缀压缩的缺点是要查找一个key，必须将其之前所有的key全部读取出来，这样显然效率太低。为了解决该问题，leveldb使用restart point方式，每隔16(可配置)个key做一次前缀压缩，这样每次读取key时，最多只要读取16</p>
+<a id="more"></a>
+</li>
+</ol>
+<h3 id="2-_data_block的构建过程">2. data block的构建过程</h3><p>data block的构建过程涉及四个文件：</p>
+<p>block.h/block.cc</p>
+<p>block_builder.h/block_builder.cc</p>
+<p>首先看下block类的构成：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> Block &#123;</span><br><span class="line"> <span class="keyword">public</span>:</span><br><span class="line">  <span class="comment">// Initialize the block with the specified contents.</span></span><br><span class="line">  <span class="function"><span class="keyword">explicit</span> <span class="title">Block</span><span class="params">(<span class="keyword">const</span> BlockContents&amp; contents)</span></span>;</span><br><span class="line">  ~Block();</span><br><span class="line">  <span class="keyword">size_t</span> size() <span class="keyword">const</span> &#123; <span class="keyword">return</span> size_; &#125;</span><br><span class="line">  <span class="function">Iterator* <span class="title">NewIterator</span><span class="params">(<span class="keyword">const</span> Comparator* comparator)</span></span>;</span><br><span class="line"> <span class="keyword">private</span>:</span><br><span class="line">  <span class="keyword">uint32_t</span> NumRestarts() <span class="keyword">const</span>;</span><br><span class="line">  <span class="keyword">const</span> <span class="keyword">char</span>* data_;  <span class="comment">// block中存放数据的地方</span></span><br><span class="line">  <span class="keyword">size_t</span> size_;  <span class="comment">// block的大小</span></span><br><span class="line">  <span class="keyword">uint32_t</span> restart_offset_;     <span class="comment">// restart point在block中开始的地方</span></span><br><span class="line">  <span class="keyword">bool</span> owned_;                  <span class="comment">// Block owns data_[]</span></span><br><span class="line">  <span class="comment">// No copying allowed</span></span><br><span class="line">  Block(<span class="keyword">const</span> Block&amp;);</span><br><span class="line">  <span class="keyword">void</span> <span class="keyword">operator</span>=(<span class="keyword">const</span> Block&amp;);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">class</span> Iter;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>可以看到block类非常简单，下面我们着重看下block_builder类：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> BlockBuilder &#123;</span><br><span class="line"> <span class="keyword">public</span>:</span><br><span class="line">  <span class="function"><span class="keyword">explicit</span> <span class="title">BlockBuilder</span><span class="params">(<span class="keyword">const</span> Options* options)</span></span>;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">void</span> <span class="title">Reset</span><span class="params">()</span></span>;</span><br><span class="line">  <span class="function"><span class="keyword">void</span> <span class="title">Add</span><span class="params">(<span class="keyword">const</span> Slice&amp; key, <span class="keyword">const</span> Slice&amp; value)</span></span>;</span><br><span class="line">  <span class="function">Slice <span class="title">Finish</span><span class="params">()</span></span>;</span><br><span class="line">  <span class="keyword">size_t</span> CurrentSizeEstimate() <span class="keyword">const</span>;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Return true iff no entries have been added since the last Reset()</span></span><br><span class="line">  <span class="function"><span class="keyword">bool</span> <span class="title">empty</span><span class="params">()</span> <span class="keyword">const</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> buffer_.empty();</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line"> <span class="keyword">private</span>:</span><br><span class="line">  <span class="keyword">const</span> Options*        options_;</span><br><span class="line">  <span class="built_in">std</span>::<span class="built_in">string</span>           buffer_;      <span class="comment">//  实际存放block的地方</span></span><br><span class="line">  <span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">uint32_t</span>&gt; restarts_;    <span class="comment">// Restart points指向的偏移位置</span></span><br><span class="line">  <span class="keyword">int</span>                   counter_;     <span class="comment">// 总共有多少条记录</span></span><br><span class="line">  <span class="keyword">bool</span>                  finished_;    <span class="comment">// Has Finish() been called?</span></span><br><span class="line">  <span class="built_in">std</span>::<span class="built_in">string</span>           last_key_;    <span class="comment">// 上一次add进的记录的key</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">// No copying allowed</span></span><br><span class="line">  BlockBuilder(<span class="keyword">const</span> BlockBuilder&amp;);</span><br><span class="line">  <span class="keyword">void</span> <span class="keyword">operator</span>=(<span class="keyword">const</span> BlockBuilder&amp;);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>BlockBuilder中主要的接口有<code>void Add(const Slice&amp; key, const Slice&amp; value)</code>和<code>Slice Finish()</code>,下面看下这两个接口的实现：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> BlockBuilder::Add(<span class="keyword">const</span> Slice&amp; key, <span class="keyword">const</span> Slice&amp; value) &#123;</span><br><span class="line">  <span class="function">Slice <span class="title">last_key_piece</span><span class="params">(last_key_)</span></span>;</span><br><span class="line">  assert(!finished_);</span><br><span class="line">  assert(counter_ &lt;= options_-&gt;block_restart_interval);</span><br><span class="line">  assert(buffer_.empty() <span class="comment">// No values yet?</span></span><br><span class="line">         || options_-&gt;comparator-&gt;Compare(key, last_key_piece) &gt; <span class="number">0</span>);</span><br><span class="line">  <span class="keyword">size_t</span> shared = <span class="number">0</span>;</span><br><span class="line">    <span class="comment">// 计数器还没到达16，说明还没有到下一个启动点</span></span><br><span class="line">  <span class="keyword">if</span> (counter_ &lt; options_-&gt;block_restart_interval) &#123;</span><br><span class="line">    <span class="comment">// 计算当前key与last_key相同部分的大小</span></span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">size_t</span> min_length = <span class="built_in">std</span>::min(last_key_piece.size(), key.size());</span><br><span class="line">    <span class="keyword">while</span> ((shared &lt; min_length) &amp;&amp; (last_key_piece[shared] == key[shared])) &#123;</span><br><span class="line">      shared++;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="comment">// 达到下一个启动点，记录当前启动点的偏移</span></span><br><span class="line">    restarts_.push_back(buffer_.size());</span><br><span class="line">    counter_ = <span class="number">0</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">const</span> <span class="keyword">size_t</span> non_shared = key.size() - shared;  <span class="comment">// key中不同部分的大小</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">// 将[相同部分大小][不同部分大小][value大小]写入buffer</span></span><br><span class="line">  PutVarint32(&amp;buffer_, shared);</span><br><span class="line">  PutVarint32(&amp;buffer_, non_shared);</span><br><span class="line">  PutVarint32(&amp;buffer_, value.size());</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Add string delta to buffer_ followed by value</span></span><br><span class="line">  buffer_.append(key.data() + shared, non_shared); <span class="comment">// 将key中不同部分写入buffer</span></span><br><span class="line">  buffer_.append(value.data(), value.size()); <span class="comment">// 将value写入buffer</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">// last_key = key</span></span><br><span class="line">  last_key_.resize(shared);</span><br><span class="line">  last_key_.append(key.data() + shared, non_shared);</span><br><span class="line">  assert(Slice(last_key_) == key);</span><br><span class="line">  counter_++;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">Slice BlockBuilder::Finish() &#123;</span><br><span class="line">  <span class="comment">// Append restart array 将启动点信息写入buffer</span></span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">size_t</span> i = <span class="number">0</span>; i &lt; restarts_.size(); i++) &#123;</span><br><span class="line">    PutFixed32(&amp;buffer_, restarts_[i]);</span><br><span class="line">  &#125;</span><br><span class="line">  PutFixed32(&amp;buffer_, restarts_.size()); <span class="comment">// 将启动点总数写入buffer</span></span><br><span class="line">  finished_ = <span class="literal">true</span>;</span><br><span class="line">  <span class="keyword">return</span> Slice(buffer_);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>void Add(const Slice&amp; key, const Slice&amp; value)</code>函数主要是将一条记录按照[key中相同部分大小] | [key中不同部分大小] | [value大小] | [key 中不同部分值] | [value值]的格式写入buffer，同时记录启动点信息。<code>Slice Finish()</code>记录主要是将启动点信息写入buffer，一般是在一个block完成add操作后进行最终调用。</p>
+
+    
+  </div>
+  <footer>
+    
+      
+  <div class="categories">
+    <a class="categories-link" href="/categories/技术/">技术</a>
+  </div>
+
+      
+  <div class="tags">
+    <a class="tags-link" href="/tags/leveldb/">leveldb</a>
+  </div>
+
+    
+  </footer>
+</article>
+
+
+</div>
+  </div>
+  <footer id="footer"><div class="footer-mask"></div>
+<div class="copyright">
+  &copy; 2018
+  
+    <a href="/">Dorothy Zhang</a>
+  
+  <div class="heartbeat"></div><div class="heartbeat"></div>
+  <div class="heartbeat float"></div>
+</div>
+<script>
+  // heartbeart forcetouch
+  var heartEl1 = document.querySelector('.heartbeat:first-of-type')
+  var heartEl2 = document.querySelector('.heartbeat:nth-child(3)')
+  var heartFloat = document.querySelector('.heartbeat.float')
+
+  function prepareForForceClick(event) {
+    event.preventDefault();
+  }
+
+  function enterForceClick(event) {
+  }
+
+  function endForceClick(event) {
+    heartFloat.style.transform = 'scale(0)';
+  }
+
+  function forceChanged(event) {
+    heartFloat.style.transform = 'scale(' + 8*event.webkitForce + ')';
+  }
+
+  function setupForceClickBehavior(someElement)
+  {
+    someElement.addEventListener("webkitmouseforcewillbegin", prepareForForceClick, false);
+    someElement.addEventListener("webkitmouseforcedown", enterForceClick, false);
+    someElement.addEventListener("webkitmouseforceup", endForceClick, false);
+    someElement.addEventListener("webkitmouseforcechanged", forceChanged, false);
+  }
+
+  setupForceClickBehavior(heartEl1);
+  setupForceClickBehavior(heartEl2);
+
+  heartFloat.addEventListener('click', function(){
+    heartFloat.style.transform = 'scale(0)'
+  }, false)
+</script>
+</footer>
+  <script src="//cdn.bootcss.com/jquery/2.2.1/jquery.min.js"></script>
+<script src="/js/scale.fix.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+  (function($){
+    $('.fancybox').fancybox();
+  })(jQuery);
+</script>
+
+
+  <div class="footer-mask"></div>
+</body>
+</html>
