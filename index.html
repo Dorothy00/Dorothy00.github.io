@@ -61,6 +61,49 @@
   <header>
     
   
+    <h1 class="title"><a href="/2018/08/02/Leveldb源码学习系列(四) Filter Block分析/">Leveldb源码学习系列(四) Filter Block分析</a></h1>
+  
+
+    
+      <a href="/2018/08/02/Leveldb源码学习系列(四) Filter Block分析/">
+  <time datetime="2018-08-02T14:53:11.000Z">
+    2018-08-02
+  </time>
+</a>
+    
+  </header>
+  
+  <div class="entry">
+    
+      <p>上一篇介绍了Data Block，本节将介绍Filter Block。</p>
+<p>Meta Block中存储的是过滤器，通过Bloom Filter可以快速判断一条记录是否在Data Block中，从而节省大量的查找时间。我们首先介绍一下什么是Bloom Filter。</p>
+<h3 id="1-_Bloom_Filter">1. Bloom Filter</h3><p>Bloom Filter主要用来快速判断一个元素是否在一个集合中，如果判断不在集合中，那么该元素就一定不在集合中；如果判断在集合中，那么该元素也有一定的概率不在集合中。也就是说Bloom Filter有一定的误判率。</p>
+<p>一般判断一个元素是否在集合中，想到的方法有散列表、二叉树等数据结构，通过查找的方式来判断。上述两种方式的时间复杂度分别为O(1)、O(logn)，空间复杂度都为O(n)。而Bloom的空间和时间复杂度都是常数级的，在有较高的查找性能的同时也能节省大量的空间。</p>
+<p>下面再来介绍下Bloom Filter的原理：</p>
+<p>Bloom Filter是一个有m个比特位的字符串，初识时每个比特位都为0。同时定义了k个哈希函数，k个哈希函数的哈希值在[0, m-1]之间，对应于m个比特位。</p>
+<p>添加一个元素时，首先计算该元素的k个哈希值，然后将k个哈希值对应的比特位置为1。查找该元素是否在集合中时，也要计算k个哈希值，然后看对应的比特位是否为1，如果有一个不为1，说明该元素一定不在集合中。</p>
+<p>以上就是Bloom filter的大致原理了。</p>
+    
+  </div>
+  <footer class="end-sep">
+    
+      
+        <div class="alignleft">
+          <a href="/2018/08/02/Leveldb源码学习系列(四) Filter Block分析/#more" class="more-link">阅读全文</a>
+        </div>
+      
+      
+    
+  </footer>
+</article>
+
+
+
+  
+    <article class="post">
+  <header>
+    
+  
     <h1 class="title"><a href="/2018/08/01/Leveldb源码学习系列(三) Block分析/">Leveldb源码学习系列(三) Block分析</a></h1>
   
 
@@ -422,42 +465,6 @@
       
         <div class="alignleft">
           <a href="/2018/01/09/Raft论文阅读笔记/#more" class="more-link">阅读全文</a>
-        </div>
-      
-      
-    
-  </footer>
-</article>
-
-
-
-  
-    <article class="post">
-  <header>
-    
-  
-    <h1 class="title"><a href="/2017/12/19/2017年终总结/">2017年终总结</a></h1>
-  
-
-    
-      <a href="/2017/12/19/2017年终总结/">
-  <time datetime="2017-12-19T12:54:11.000Z">
-    2017-12-19
-  </time>
-</a>
-    
-  </header>
-  
-  <div class="entry">
-    
-      <p>距离2018还有10天，是时候来一波年终总结了。<br>
-    
-  </div>
-  <footer class="end-sep">
-    
-      
-        <div class="alignleft">
-          <a href="/2017/12/19/2017年终总结/#more" class="more-link">阅读全文</a>
         </div>
       
       

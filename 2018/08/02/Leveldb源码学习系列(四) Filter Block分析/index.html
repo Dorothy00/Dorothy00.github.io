@@ -1,0 +1,188 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  
+  <title>Leveldb源码学习系列(四) Filter Block分析 | DOROTHY</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  
+    <meta name="author" content="Dorothy Zhang">
+  
+  
+    <meta name="description" content="上一篇介绍了Data Block，本节将介绍Filter Block。
+Meta Block中存储的是过滤器，通过Bloom Filter可以快速判断一条记录是否在Data Block中，从而节省大量的查找时间。我们首先介绍一下什么是Bloom Filter。
+1. Bloom FilterBloom Filter主要用来快速判断一个元素是否在一个集合中，如果判断不在集合中，那么该元素就一定不在集">
+  
+  <meta name="description" content="上一篇介绍了Data Block，本节将介绍Filter Block。
+Meta Block中存储的是过滤器，通过Bloom Filter可以快速判断一条记录是否在Data Block中，从而节省大量的查找时间。我们首先介绍一下什么是Bloom Filter。
+1. Bloom FilterBloom Filter主要用来快速判断一个元素是否在一个集合中，如果判断不在集合中，那么该元素就一定不在集">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Leveldb源码学习系列(四) Filter Block分析">
+<meta property="og:url" content="http://yoursite.com/2018/08/02/Leveldb源码学习系列(四) Filter Block分析/index.html">
+<meta property="og:site_name" content="DOROTHY">
+<meta property="og:description" content="上一篇介绍了Data Block，本节将介绍Filter Block。
+Meta Block中存储的是过滤器，通过Bloom Filter可以快速判断一条记录是否在Data Block中，从而节省大量的查找时间。我们首先介绍一下什么是Bloom Filter。
+1. Bloom FilterBloom Filter主要用来快速判断一个元素是否在一个集合中，如果判断不在集合中，那么该元素就一定不在集">
+<meta property="og:image" content="http://7xoxkx.com1.z0.glb.clouddn.com/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-08-02%20%E4%B8%8B%E5%8D%8810.57.54.png">
+<meta property="og:updated_time" content="2018-08-02T14:59:29.440Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Leveldb源码学习系列(四) Filter Block分析">
+<meta name="twitter:description" content="上一篇介绍了Data Block，本节将介绍Filter Block。
+Meta Block中存储的是过滤器，通过Bloom Filter可以快速判断一条记录是否在Data Block中，从而节省大量的查找时间。我们首先介绍一下什么是Bloom Filter。
+1. Bloom FilterBloom Filter主要用来快速判断一个元素是否在一个集合中，如果判断不在集合中，那么该元素就一定不在集">
+  
+  
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+</head>
+
+<body>
+  <header id="header">
+  <div class="title-wrapper">
+    <div class="title">
+      <h1><a href="/">DOROTHY</a></h1>
+      <p><a href="/"></a></p>
+    </div>
+  </div>
+</header>
+<nav class="nav">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+      <li><a href="/about">About</a></li>
+    
+    
+  </ul>
+</nav>
+
+  <div class="wrapper">
+    <div class="content"><article class="post">
+  <header>
+    
+  
+    <h1 class="title">Leveldb源码学习系列(四) Filter Block分析</h1>
+  
+
+    
+      <a href="/2018/08/02/Leveldb源码学习系列(四) Filter Block分析/">
+  <time datetime="2018-08-02T14:53:11.000Z">
+    2018-08-02
+  </time>
+</a>
+    
+  </header>
+  
+  <div class="entry">
+    
+      <p>上一篇介绍了Data Block，本节将介绍Filter Block。</p>
+<p>Meta Block中存储的是过滤器，通过Bloom Filter可以快速判断一条记录是否在Data Block中，从而节省大量的查找时间。我们首先介绍一下什么是Bloom Filter。</p>
+<h3 id="1-_Bloom_Filter">1. Bloom Filter</h3><p>Bloom Filter主要用来快速判断一个元素是否在一个集合中，如果判断不在集合中，那么该元素就一定不在集合中；如果判断在集合中，那么该元素也有一定的概率不在集合中。也就是说Bloom Filter有一定的误判率。</p>
+<p>一般判断一个元素是否在集合中，想到的方法有散列表、二叉树等数据结构，通过查找的方式来判断。上述两种方式的时间复杂度分别为O(1)、O(logn)，空间复杂度都为O(n)。而Bloom的空间和时间复杂度都是常数级的，在有较高的查找性能的同时也能节省大量的空间。</p>
+<p>下面再来介绍下Bloom Filter的原理：</p>
+<p>Bloom Filter是一个有m个比特位的字符串，初识时每个比特位都为0。同时定义了k个哈希函数，k个哈希函数的哈希值在[0, m-1]之间，对应于m个比特位。</p>
+<p>添加一个元素时，首先计算该元素的k个哈希值，然后将k个哈希值对应的比特位置为1。查找该元素是否在集合中时，也要计算k个哈希值，然后看对应的比特位是否为1，如果有一个不为1，说明该元素一定不在集合中。</p>
+<p>以上就是Bloom filter的大致原理了。</p>
+<a id="more"></a>
+<h3 id="2-_Filter_Block的结构">2. Filter Block的结构</h3><p><img src="http://7xoxkx.com1.z0.glb.clouddn.com/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-08-02%20%E4%B8%8B%E5%8D%8810.57.54.png" alt=""></p>
+<h3 id="3-_Leveldb中Filter_Block的构建">3. Leveldb中Filter Block的构建</h3><p>构建Meta Block主要涉及到四个文件，分别是：filter_block.h/filter_block.cc, filter_policy.h/Bloom.cc。</p>
+<p>filter_policy是构建Bloom Filter的类，Bloom.cc是该类的具体实现。我们首先看下Leveldb如何构建Bloom Filter：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br></pre></td><td class="code"><pre><span class="line">class FilterPolicy &#123;</span><br><span class="line"> public:</span><br><span class="line">  virtual ~FilterPolicy();</span><br><span class="line">  virtual const char* Name() const = 0;</span><br><span class="line">  // 根据keys，创建Bloom Filter</span><br><span class="line">  virtual void CreateFilter(const Slice* keys, int n, std::string* dst)</span><br><span class="line">      const = 0;</span><br><span class="line">   // 判断key是否在在集合中</span><br><span class="line">  virtual bool KeyMayMatch(const Slice&amp; key, const Slice&amp; filter) const = 0;</span><br><span class="line">&#125;;</span><br><span class="line">extern const FilterPolicy* NewBloomFilterPolicy(int bits_per_key);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">class BloomFilterPolicy : public FilterPolicy &#123;</span><br><span class="line"> private:</span><br><span class="line">  size_t bits_per_key_;  // 一个key要占用多少个比特位</span><br><span class="line">  size_t k_; // k_个哈希函数</span><br><span class="line"></span><br><span class="line"> public:</span><br><span class="line">  explicit BloomFilterPolicy(int bits_per_key)</span><br><span class="line">      : bits_per_key_(bits_per_key) &#123;</span><br><span class="line">    // We intentionally round down to reduce probing cost a little bit</span><br><span class="line">    k_ = static_cast&lt;size_t&gt;(bits_per_key * 0.69);  // 0.69 =~ ln(2)</span><br><span class="line">    if (k_ &lt; 1) k_ = 1;</span><br><span class="line">    if (k_ &gt; 30) k_ = 30;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  virtual const char* Name() const &#123;</span><br><span class="line">    return "leveldb.BuiltinBloomFilter2";</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  virtual void CreateFilter(const Slice* keys, int n, std::string* dst) const &#123;</span><br><span class="line">    // Compute bloom filter size (in both bits and bytes)</span><br><span class="line">    size_t bits = n * bits_per_key_;  //该Bloom Filter总共需要多少位存储</span><br><span class="line"></span><br><span class="line">    // For small n, we can see a very high false positive rate.  Fix it</span><br><span class="line">    // by enforcing a minimum bloom filter length.</span><br><span class="line">    if (bits &lt; 64) bits = 64; // 比特位太少误判率会很高，设定一个最小值</span><br><span class="line"></span><br><span class="line">    size_t bytes = (bits + 7) / 8;</span><br><span class="line">    bits = bytes * 8;</span><br><span class="line"></span><br><span class="line">    const size_t init_size = dst-&gt;size();</span><br><span class="line">    dst-&gt;resize(init_size + bytes, 0);//将bitmap放到dst后面，可见dst存放不止一个bitmap</span><br><span class="line">    dst-&gt;push_back(static_cast&lt;char&gt;(k_));  // Remember # of probes in filter</span><br><span class="line">    char* array = &amp;(*dst)[init_size]; // array指向bitmap开始的地方</span><br><span class="line">    for (size_t i = 0; i &lt; n; i++) &#123;</span><br><span class="line">      // Use double-hashing to generate a sequence of hash values.</span><br><span class="line">      // See analysis in [Kirsch,Mitzenmacher 2006].</span><br><span class="line">      uint32_t h = BloomHash(keys[i]);</span><br><span class="line">      const uint32_t delta = (h &gt;&gt; 17) | (h &lt;&lt; 15);  // Rotate right 17 bits</span><br><span class="line">      for (size_t j = 0; j &lt; k_; j++) &#123;  // 将k个哈希值映射到对应的比特位</span><br><span class="line">        const uint32_t bitpos = h % bits;</span><br><span class="line">        array[bitpos/8] |= (1 &lt;&lt; (bitpos % 8));</span><br><span class="line">        h += delta;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  virtual bool KeyMayMatch(const Slice&amp; key, const Slice&amp; bloom_filter) const &#123;</span><br><span class="line">    const size_t len = bloom_filter.size();</span><br><span class="line">    if (len &lt; 2) return false;</span><br><span class="line"></span><br><span class="line">    const char* array = bloom_filter.data();</span><br><span class="line">    const size_t bits = (len - 1) * 8; // bloom filter总共的比特位数</span><br><span class="line"></span><br><span class="line">    // Use the encoded k so that we can read filters generated by</span><br><span class="line">    // bloom filters created using different parameters.</span><br><span class="line">    const size_t k = array[len-1]; // 最后一个字节存储的是哈希函数的个数</span><br><span class="line">    if (k &gt; 30) &#123; // 如果哈希函数大于30，说明key很少，计算30个哈希函数代价较大，不如直接遍历，因而返回true</span><br><span class="line">      // Reserved for potentially new encodings for short bloom filters.</span><br><span class="line">      // Consider it a match.</span><br><span class="line">      return true;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    uint32_t h = BloomHash(key);</span><br><span class="line">    const uint32_t delta = (h &gt;&gt; 17) | (h &lt;&lt; 15);  // Rotate right 17 bits</span><br><span class="line">    for (size_t j = 0; j &lt; k; j++) &#123; // 计算k个哈希，然后查看对应的比特位值是否位1</span><br><span class="line">      const uint32_t bitpos = h % bits;</span><br><span class="line">      if ((array[bitpos/8] &amp; (1 &lt;&lt; (bitpos % 8))) == 0) return false;</span><br><span class="line">      h += delta;</span><br><span class="line">    &#125;</span><br><span class="line">    return true;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>弄懂Bloom Filter的原理，上面的代码应该就比较好理解了。下面看下filter block的构建过程：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//构建Filter block</span></span><br><span class="line"><span class="keyword">class</span> FilterBlockBuilder &#123;</span><br><span class="line"> <span class="keyword">public</span>:</span><br><span class="line">  <span class="function"><span class="keyword">explicit</span> <span class="title">FilterBlockBuilder</span><span class="params">(<span class="keyword">const</span> FilterPolicy*)</span></span>;</span><br><span class="line">  <span class="comment">// 根据data block的偏移量构建filter block</span></span><br><span class="line">  <span class="function"><span class="keyword">void</span> <span class="title">StartBlock</span><span class="params">(uint64_t block_offset)</span></span>;</span><br><span class="line">  <span class="comment">// data block添加key-value时，会同时构建该key的bloom filter</span></span><br><span class="line">  <span class="function"><span class="keyword">void</span> <span class="title">AddKey</span><span class="params">(<span class="keyword">const</span> Slice&amp; key)</span></span>;</span><br><span class="line">  <span class="comment">// 构建完成时调用，写入bloom filter的一些偏移信息</span></span><br><span class="line">  <span class="function">Slice <span class="title">Finish</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line"> <span class="keyword">private</span>:</span><br><span class="line">  <span class="function"><span class="keyword">void</span> <span class="title">GenerateFilter</span><span class="params">()</span></span>; <span class="comment">// 创建一个Bloom filter</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">const</span> FilterPolicy* policy_;</span><br><span class="line">  <span class="built_in">std</span>::<span class="built_in">string</span> keys_;              <span class="comment">// Flattened key contents  // key通过追加的方式放在 keys_中</span></span><br><span class="line">  <span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">size_t</span>&gt; start_;     <span class="comment">// Starting index in keys_ of each key //保存了每个key开始的偏移量</span></span><br><span class="line">  <span class="built_in">std</span>::<span class="built_in">string</span> result_;            <span class="comment">// Filter data computed so far //存放bloom filter的bitmap的地方</span></span><br><span class="line">  <span class="built_in">std</span>::<span class="built_in">vector</span>&lt;Slice&gt; tmp_keys_;   <span class="comment">// policy_-&gt;CreateFilter() argument</span></span><br><span class="line">  <span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">uint32_t</span>&gt; filter_offsets_; <span class="comment">// result_中存放了多个bitmap， filter_offsets_记录了每个bitmap的偏移</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">// No copying allowed</span></span><br><span class="line">  FilterBlockBuilder(<span class="keyword">const</span> FilterBlockBuilder&amp;);</span><br><span class="line">  <span class="keyword">void</span> <span class="keyword">operator</span>=(<span class="keyword">const</span> FilterBlockBuilder&amp;);</span><br><span class="line">&#125;;</span><br><span class="line"><span class="comment">// 读取filter block</span></span><br><span class="line"><span class="keyword">class</span> FilterBlockReader &#123;</span><br><span class="line"> <span class="keyword">public</span>:</span><br><span class="line"> <span class="comment">// REQUIRES: "contents" and *policy must stay live while *this is live.</span></span><br><span class="line">  FilterBlockReader(<span class="keyword">const</span> FilterPolicy* policy, <span class="keyword">const</span> Slice&amp; contents);</span><br><span class="line">  <span class="function"><span class="keyword">bool</span> <span class="title">KeyMayMatch</span><span class="params">(uint64_t block_offset, <span class="keyword">const</span> Slice&amp; key)</span></span>;</span><br><span class="line"></span><br><span class="line"> <span class="keyword">private</span>:</span><br><span class="line">  <span class="keyword">const</span> FilterPolicy* policy_;</span><br><span class="line">  <span class="keyword">const</span> <span class="keyword">char</span>* data_;    <span class="comment">// Pointer to filter data (at block-start) // bloom filter </span></span><br><span class="line">  <span class="keyword">const</span> <span class="keyword">char</span>* offset_;  <span class="comment">// Pointer to beginning of offset array (at block-end) // offset array开始的地方</span></span><br><span class="line">  <span class="keyword">size_t</span> num_;          <span class="comment">// Number of entries in offset array // 有多少个bitmap</span></span><br><span class="line">  <span class="keyword">size_t</span> base_lg_;      <span class="comment">// Encoding parameter (see kFilterBaseLg in .cc file) </span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>FilterBlockBuilder和FilterBlockReader的接口，下面我们看下他们的具体实现：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">const</span> <span class="keyword">size_t</span> kFilterBaseLg = <span class="number">11</span>;</span><br><span class="line"><span class="keyword">static</span> <span class="keyword">const</span> <span class="keyword">size_t</span> kFilterBase = <span class="number">1</span> &lt;&lt; kFilterBaseLg;  <span class="comment">//data block每达到2k就构建一个bloom filter</span></span><br><span class="line"></span><br><span class="line">FilterBlockBuilder::FilterBlockBuilder(<span class="keyword">const</span> FilterPolicy* policy)</span><br><span class="line">    : policy_(policy) &#123;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> FilterBlockBuilder::StartBlock(<span class="keyword">uint64_t</span> block_offset) &#123;</span><br><span class="line">  <span class="keyword">uint64_t</span> filter_index = (block_offset / kFilterBase);</span><br><span class="line">  assert(filter_index &gt;= filter_offsets_.size());</span><br><span class="line">  <span class="keyword">while</span> (filter_index &gt; filter_offsets_.size()) &#123;</span><br><span class="line">    GenerateFilter();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> FilterBlockBuilder::AddKey(<span class="keyword">const</span> Slice&amp; key) &#123;</span><br><span class="line">  Slice k = key;</span><br><span class="line">  start_.push_back(keys_.size());  <span class="comment">// 将key的偏移量加入到start_中</span></span><br><span class="line">  keys_.append(k.data(), k.size()); <span class="comment">// 将key append到keys_中</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">Slice FilterBlockBuilder::Finish() &#123;</span><br><span class="line">  <span class="keyword">if</span> (!start_.empty()) &#123;</span><br><span class="line">    GenerateFilter();</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Append array of per-filter offsets //在result_中写入filter_offset</span></span><br><span class="line">  <span class="keyword">const</span> <span class="keyword">uint32_t</span> array_offset = result_.size();</span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">size_t</span> i = <span class="number">0</span>; i &lt; filter_offsets_.size(); i++) &#123;</span><br><span class="line">    PutFixed32(&amp;result_, filter_offsets_[i]);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  PutFixed32(&amp;result_, array_offset); <span class="comment">//写入array_offset开始的偏移量</span></span><br><span class="line">  result_.push_back(kFilterBaseLg);  <span class="comment">// Save encoding parameter in result</span></span><br><span class="line">  <span class="keyword">return</span> Slice(result_);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> FilterBlockBuilder::GenerateFilter() &#123;</span><br><span class="line">  <span class="keyword">const</span> <span class="keyword">size_t</span> num_keys = start_.size(); <span class="comment">//key的数量</span></span><br><span class="line">  <span class="keyword">if</span> (num_keys == <span class="number">0</span>) &#123;</span><br><span class="line">    <span class="comment">//这里为什么会有num_keys=0的情况呢？这是因为每个data block不会刚好是2k的，如果一个data block是4k，那么是不是需要生成两个bloom filter呢？其实不是的，只有一个bloom filter，但是filter offset会有两条记录，都指向那个bloom filter。</span></span><br><span class="line">    <span class="comment">// Fast path if there are no keys for this filter</span></span><br><span class="line">    filter_offsets_.push_back(result_.size());</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Make list of keys from flattened key structure</span></span><br><span class="line">  start_.push_back(keys_.size());  <span class="comment">// Simplify length computation // 将key的偏移加入到start_中</span></span><br><span class="line">  tmp_keys_.resize(num_keys);</span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">size_t</span> i = <span class="number">0</span>; i &lt; num_keys; i++) &#123;<span class="comment">// 构造temp_key后面会用到</span></span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">char</span>* base = keys_.data() + start_[i];</span><br><span class="line">    <span class="keyword">size_t</span> length = start_[i+<span class="number">1</span>] - start_[i];</span><br><span class="line">    tmp_keys_[i] = Slice(base, length);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Generate filter for current set of keys and append to result_.</span></span><br><span class="line">  filter_offsets_.push_back(result_.size()); <span class="comment">// 最后一个bitmap的偏移</span></span><br><span class="line">  policy_-&gt;CreateFilter(&amp;tmp_keys_[<span class="number">0</span>], num_keys, &amp;result_); <span class="comment">//利用bloom.cc 构造bloom filter， 存储在result_中</span></span><br><span class="line"></span><br><span class="line">  tmp_keys_.clear();</span><br><span class="line">  keys_.clear();</span><br><span class="line">  start_.clear();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">FilterBlockReader::FilterBlockReader(<span class="keyword">const</span> FilterPolicy* policy,</span><br><span class="line">                                     <span class="keyword">const</span> Slice&amp; contents)</span><br><span class="line">    : policy_(policy),</span><br><span class="line">      data_(<span class="literal">NULL</span>),</span><br><span class="line">      offset_(<span class="literal">NULL</span>),</span><br><span class="line">      num_(<span class="number">0</span>),</span><br><span class="line">      base_lg_(<span class="number">0</span>) &#123;</span><br><span class="line">  <span class="keyword">size_t</span> n = contents.size();</span><br><span class="line">  <span class="keyword">if</span> (n &lt; <span class="number">5</span>) <span class="keyword">return</span>;  <span class="comment">// 1 byte for base_lg_ and 4 for start of offset array // 小于5说明没有bitmap</span></span><br><span class="line">  base_lg_ = contents[n-<span class="number">1</span>]; <span class="comment">// 最后一个字节存储的是kFilterBaseLg</span></span><br><span class="line">  <span class="keyword">uint32_t</span> last_word = DecodeFixed32(contents.data() + n - <span class="number">5</span>); <span class="comment">// 倒数第5到倒数第2个字节存储的是array_offset的起始偏移，也就是bitmap结束的位置</span></span><br><span class="line">  <span class="keyword">if</span> (last_word &gt; n - <span class="number">5</span>) <span class="keyword">return</span>;</span><br><span class="line">  data_ = contents.data();</span><br><span class="line">  offset_ = data_ + last_word;  <span class="comment">// array_offset开始的地方</span></span><br><span class="line">  num_ = (n - <span class="number">5</span> - last_word) / <span class="number">4</span>; <span class="comment">//  每个offset占4个字节，偏移量除以4就是总共的bitmap数</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">bool</span> FilterBlockReader::KeyMayMatch(<span class="keyword">uint64_t</span> block_offset, <span class="keyword">const</span> Slice&amp; key) &#123;</span><br><span class="line">  <span class="keyword">uint64_t</span> index = block_offset &gt;&gt; base_lg_; <span class="comment">//得到bitmap的index</span></span><br><span class="line">  <span class="keyword">if</span> (index &lt; num_) &#123;</span><br><span class="line">    <span class="keyword">uint32_t</span> start = DecodeFixed32(offset_ + index*<span class="number">4</span>);  </span><br><span class="line">    <span class="keyword">uint32_t</span> limit = DecodeFixed32(offset_ + index*<span class="number">4</span> + <span class="number">4</span>);</span><br><span class="line">    <span class="keyword">if</span> (start &lt;= limit &amp;&amp; limit &lt;= (offset_ - data_)) &#123;</span><br><span class="line">      Slice filter = Slice(data_ + start, limit - start);  <span class="comment">// 得到bloom filter</span></span><br><span class="line">      <span class="keyword">return</span> policy_-&gt;KeyMayMatch(key, filter); <span class="comment">// 通过bloom.cc判断key是否在filter中</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (start == limit) &#123;</span><br><span class="line">      <span class="comment">// Empty filters do not match any keys</span></span><br><span class="line">      <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="literal">true</span>;  <span class="comment">// Errors are treated as potential matches</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+    
+  </div>
+  <footer>
+    
+      
+  <div class="categories">
+    <a class="categories-link" href="/categories/技术/">技术</a>
+  </div>
+
+      
+  <div class="tags">
+    <a class="tags-link" href="/tags/leveldb/">leveldb</a>
+  </div>
+
+    
+  </footer>
+</article>
+
+
+</div>
+  </div>
+  <footer id="footer"><div class="footer-mask"></div>
+<div class="copyright">
+  &copy; 2018
+  
+    <a href="/">Dorothy Zhang</a>
+  
+  <div class="heartbeat"></div><div class="heartbeat"></div>
+  <div class="heartbeat float"></div>
+</div>
+<script>
+  // heartbeart forcetouch
+  var heartEl1 = document.querySelector('.heartbeat:first-of-type')
+  var heartEl2 = document.querySelector('.heartbeat:nth-child(3)')
+  var heartFloat = document.querySelector('.heartbeat.float')
+
+  function prepareForForceClick(event) {
+    event.preventDefault();
+  }
+
+  function enterForceClick(event) {
+  }
+
+  function endForceClick(event) {
+    heartFloat.style.transform = 'scale(0)';
+  }
+
+  function forceChanged(event) {
+    heartFloat.style.transform = 'scale(' + 8*event.webkitForce + ')';
+  }
+
+  function setupForceClickBehavior(someElement)
+  {
+    someElement.addEventListener("webkitmouseforcewillbegin", prepareForForceClick, false);
+    someElement.addEventListener("webkitmouseforcedown", enterForceClick, false);
+    someElement.addEventListener("webkitmouseforceup", endForceClick, false);
+    someElement.addEventListener("webkitmouseforcechanged", forceChanged, false);
+  }
+
+  setupForceClickBehavior(heartEl1);
+  setupForceClickBehavior(heartEl2);
+
+  heartFloat.addEventListener('click', function(){
+    heartFloat.style.transform = 'scale(0)'
+  }, false)
+</script>
+</footer>
+  <script src="//cdn.bootcss.com/jquery/2.2.1/jquery.min.js"></script>
+<script src="/js/scale.fix.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+  (function($){
+    $('.fancybox').fancybox();
+  })(jQuery);
+</script>
+
+
+  <div class="footer-mask"></div>
+</body>
+</html>
