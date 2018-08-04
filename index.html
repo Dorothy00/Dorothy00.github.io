@@ -61,6 +61,44 @@
   <header>
     
   
+    <h1 class="title"><a href="/2018/08/04/Leveldb源码学习系列(六) Cache 分析/">Leveldb源码学习系列(六) Cache 分析</a></h1>
+  
+
+    
+      <a href="/2018/08/04/Leveldb源码学习系列(六) Cache 分析/">
+  <time datetime="2018-08-04T08:22:11.000Z">
+    2018-08-04
+  </time>
+</a>
+    
+  </header>
+  
+  <div class="entry">
+    
+      <p>Leveldb在从table中读数据时会首先从cache中读，如果cache中没有才从磁盘读，这样可以减少IO访问次数。本节将分析一下Leveldb中cache的具体实现方式。</p>
+<h3 id="1-_Cache的结构">1. Cache的结构</h3><p>Leveldb中的cache使用的是LRU的实现方式，其结构如下图所示：</p>
+<p><img src="http://7xoxkx.com1.z0.glb.clouddn.com/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-08-04%20%E4%B8%8B%E5%8D%884.20.27.png" alt=""></p>
+    
+  </div>
+  <footer class="end-sep">
+    
+      
+        <div class="alignleft">
+          <a href="/2018/08/04/Leveldb源码学习系列(六) Cache 分析/#more" class="more-link">阅读全文</a>
+        </div>
+      
+      
+    
+  </footer>
+</article>
+
+
+
+  
+    <article class="post">
+  <header>
+    
+  
     <h1 class="title"><a href="/2018/08/04/Leveldb源码学习系列(五) Table Builder分析/">Leveldb源码学习系列(五) Table Builder分析</a></h1>
   
 
@@ -429,42 +467,6 @@
         <div class="alignleft">
           <a href="/2018/05/28/ The Google File System 总结/#more" class="more-link">阅读全文</a>
         </div>
-      
-      
-    
-  </footer>
-</article>
-
-
-
-  
-    <article class="post">
-  <header>
-    
-  
-    <h1 class="title"><a href="/2018/05/18/MIT-6.824课程总结/">MIT-6.824课程总结</a></h1>
-  
-
-    
-      <a href="/2018/05/18/MIT-6.824课程总结/">
-  <time datetime="2018-05-18T06:30:01.000Z">
-    2018-05-18
-  </time>
-</a>
-    
-  </header>
-  
-  <div class="entry">
-    
-      <p>  断断续续在写大论文的6个月里终于完成了MIT-6.824的实验部分了(Lab1, Lab2, Lab3, Lab4A)。实验主要是围绕Raft的实现与应用展开。Lab1是实现一个简单的<code>MapReduce</code>系统，应该是4个实验里最简单的一个。Lab2需要实现<code>Raft</code>协议，个人认为是实验里难的一个，完成这个实验后对<code>Raft</code>论文有了一个更直观的认识，知道了它的原理是什么了。然后Lab3和Lab4都是基于<code>Raft</code>协议的应用，通过这两个实验可以知道如何使用<code>Raft</code>以及<code>Raft</code>协议可以用来做什么。虽然自己在做实验的过程比较漫长(穿插了毕业论文，中间有一个bug修了一周才找到原因)，但完成后还是成就感满满，对于<code>Raft</code>协议也有了更深的认识。</p>
-<p>实现过程中也读了课程中的几篇论文，除了<code>Raft</code>和<code>MapReduce</code>有直观的印象外，其他都是云里雾里，不太懂。我想可能是因为我对分布式中用到的技术、原理目前了解都还不太深，后面还有很多东西需要学习。</p>
-<p>实验代码链接：</p>
-<p><a href="https://github.com/ZiyueHuang/Distributed-Systems" target="_blank" rel="external">https://github.com/ZiyueHuang/Distributed-Systems</a></p>
-
-    
-  </div>
-  <footer class="end-sep">
-    
       
       
     

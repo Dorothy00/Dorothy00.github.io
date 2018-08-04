@@ -1,0 +1,177 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  
+  <title>Leveldb源码学习系列(六) Cache 分析 | DOROTHY</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  
+    <meta name="author" content="Dorothy Zhang">
+  
+  
+    <meta name="description" content="Leveldb在从table中读数据时会首先从cache中读，如果cache中没有才从磁盘读，这样可以减少IO访问次数。本节将分析一下Leveldb中cache的具体实现方式。
+1. Cache的结构Leveldb中的cache使用的是LRU的实现方式，其结构如下图所示：">
+  
+  <meta name="description" content="Leveldb在从table中读数据时会首先从cache中读，如果cache中没有才从磁盘读，这样可以减少IO访问次数。本节将分析一下Leveldb中cache的具体实现方式。
+1. Cache的结构Leveldb中的cache使用的是LRU的实现方式，其结构如下图所示：">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Leveldb源码学习系列(六) Cache 分析">
+<meta property="og:url" content="http://yoursite.com/2018/08/04/Leveldb源码学习系列(六) Cache 分析/index.html">
+<meta property="og:site_name" content="DOROTHY">
+<meta property="og:description" content="Leveldb在从table中读数据时会首先从cache中读，如果cache中没有才从磁盘读，这样可以减少IO访问次数。本节将分析一下Leveldb中cache的具体实现方式。
+1. Cache的结构Leveldb中的cache使用的是LRU的实现方式，其结构如下图所示：">
+<meta property="og:image" content="http://7xoxkx.com1.z0.glb.clouddn.com/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-08-04%20%E4%B8%8B%E5%8D%884.20.27.png">
+<meta property="og:updated_time" content="2018-08-04T08:22:58.988Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Leveldb源码学习系列(六) Cache 分析">
+<meta name="twitter:description" content="Leveldb在从table中读数据时会首先从cache中读，如果cache中没有才从磁盘读，这样可以减少IO访问次数。本节将分析一下Leveldb中cache的具体实现方式。
+1. Cache的结构Leveldb中的cache使用的是LRU的实现方式，其结构如下图所示：">
+  
+  
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+</head>
+
+<body>
+  <header id="header">
+  <div class="title-wrapper">
+    <div class="title">
+      <h1><a href="/">DOROTHY</a></h1>
+      <p><a href="/"></a></p>
+    </div>
+  </div>
+</header>
+<nav class="nav">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+      <li><a href="/about">About</a></li>
+    
+    
+  </ul>
+</nav>
+
+  <div class="wrapper">
+    <div class="content"><article class="post">
+  <header>
+    
+  
+    <h1 class="title">Leveldb源码学习系列(六) Cache 分析</h1>
+  
+
+    
+      <a href="/2018/08/04/Leveldb源码学习系列(六) Cache 分析/">
+  <time datetime="2018-08-04T08:22:11.000Z">
+    2018-08-04
+  </time>
+</a>
+    
+  </header>
+  
+  <div class="entry">
+    
+      <p>Leveldb在从table中读数据时会首先从cache中读，如果cache中没有才从磁盘读，这样可以减少IO访问次数。本节将分析一下Leveldb中cache的具体实现方式。</p>
+<h3 id="1-_Cache的结构">1. Cache的结构</h3><p>Leveldb中的cache使用的是LRU的实现方式，其结构如下图所示：</p>
+<p><img src="http://7xoxkx.com1.z0.glb.clouddn.com/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-08-04%20%E4%B8%8B%E5%8D%884.20.27.png" alt=""></p>
+<a id="more"></a>
+<p>一个cache由一个table和双向循环链表组成。table是一个数组，数组中的每个bucket存储的是哈希值相同的链表。通过table可以快速获取cache中的值。而双向循环链表主要是为了实现LRU，双向循环链表的优点是插入和删除一个值只要O(1)的时间复杂度。</p>
+<h3 id="2-_Cache实现分析">2. Cache实现分析</h3><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// LRUHandle是cache中实际存储的节点</span></span><br><span class="line"><span class="keyword">struct</span> LRUHandle &#123;</span><br><span class="line">  <span class="keyword">void</span>* value;  </span><br><span class="line">  <span class="keyword">void</span> (*deleter)(<span class="keyword">const</span> Slice&amp;, <span class="keyword">void</span>* value);</span><br><span class="line">  LRUHandle* next_hash; <span class="comment">// 下一个节点，主要用于TableHandle的链表中</span></span><br><span class="line">  LRUHandle* next;  <span class="comment">// 双向链表的next</span></span><br><span class="line">  LRUHandle* prev; <span class="comment">// 双向链表的prev</span></span><br><span class="line">  <span class="keyword">size_t</span> charge;      <span class="comment">// TODO(opt): Only allow uint32_t?</span></span><br><span class="line">  <span class="keyword">size_t</span> key_length; <span class="comment">// key长度</span></span><br><span class="line">  <span class="keyword">uint32_t</span> refs;   <span class="comment">// 该节点引用数</span></span><br><span class="line">  <span class="keyword">uint32_t</span> hash;      <span class="comment">// Hash of key(); used for fast sharding and comparisons</span></span><br><span class="line">  <span class="keyword">char</span> key_data[<span class="number">1</span>];   <span class="comment">// Beginning of key // 实际存放key的地方，由于key大小未知，这里使用柔性数组</span></span><br><span class="line"></span><br><span class="line">  <span class="function">Slice <span class="title">key</span><span class="params">()</span> <span class="keyword">const</span> </span>&#123;</span><br><span class="line">    <span class="comment">// For cheaper lookups, we allow a temporary Handle object</span></span><br><span class="line">    <span class="comment">// to store a pointer to a key in "value".</span></span><br><span class="line">    <span class="keyword">if</span> (next == <span class="keyword">this</span>) &#123;</span><br><span class="line">      <span class="keyword">return</span> *(<span class="keyword">reinterpret_cast</span>&lt;Slice*&gt;(value));</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="keyword">return</span> Slice(key_data, key_length);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> HandleTable &#123;</span><br><span class="line"> <span class="keyword">public</span>:</span><br><span class="line">  HandleTable() : length_(<span class="number">0</span>), elems_(<span class="number">0</span>), list_(<span class="literal">NULL</span>) &#123; Resize(); &#125;</span><br><span class="line">  ~HandleTable() &#123; <span class="keyword">delete</span>[] list_; &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function">LRUHandle* <span class="title">Lookup</span><span class="params">(<span class="keyword">const</span> Slice&amp; key, uint32_t hash)</span> </span>&#123;</span><br><span class="line">      <span class="comment">// 根据FindPointer查找</span></span><br><span class="line">    <span class="keyword">return</span> *FindPointer(key, hash);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function">LRUHandle* <span class="title">Insert</span><span class="params">(LRUHandle* h)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 首先找到要插入的位置</span></span><br><span class="line">    LRUHandle** ptr = FindPointer(h-&gt;key(), h-&gt;hash);</span><br><span class="line">    LRUHandle* old = *ptr;</span><br><span class="line">    <span class="comment">// 如果要插入的位置已经有节点了，就将旧的节点删除</span></span><br><span class="line">    h-&gt;next_hash = (old == <span class="literal">NULL</span> ? <span class="literal">NULL</span> : old-&gt;next_hash);</span><br><span class="line">    *ptr = h;</span><br><span class="line">    <span class="comment">// 如果是新增的节点，还要判断是否需要resize</span></span><br><span class="line">    <span class="keyword">if</span> (old == <span class="literal">NULL</span>) &#123;</span><br><span class="line">      ++elems_;</span><br><span class="line">      <span class="keyword">if</span> (elems_ &gt; length_) &#123;</span><br><span class="line">        <span class="comment">// Since each cache entry is fairly large, we aim for a small</span></span><br><span class="line">        <span class="comment">// average linked list length (&lt;= 1).</span></span><br><span class="line">        Resize();</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> old;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function">LRUHandle* <span class="title">Remove</span><span class="params">(<span class="keyword">const</span> Slice&amp; key, uint32_t hash)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 首先找到该节点</span></span><br><span class="line">    LRUHandle** ptr = FindPointer(key, hash);</span><br><span class="line">    LRUHandle* result = *ptr;</span><br><span class="line">    <span class="keyword">if</span> (result != <span class="literal">NULL</span>) &#123;</span><br><span class="line">       <span class="comment">// 将当前位置指向该节点的下一个节点，这样这个节点就被删除了</span></span><br><span class="line">      *ptr = result-&gt;next_hash;</span><br><span class="line">      --elems_;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line"> <span class="keyword">private</span>:</span><br><span class="line">  <span class="comment">// The table consists of an array of buckets where each bucket is</span></span><br><span class="line">  <span class="comment">// a linked list of cache entries that hash into the bucket.</span></span><br><span class="line">  <span class="keyword">uint32_t</span> length_;</span><br><span class="line">  <span class="keyword">uint32_t</span> elems_;</span><br><span class="line">  LRUHandle** list_;  <span class="comment">// list_中存放的元素是LRUHandle*， </span></span><br><span class="line"></span><br><span class="line">  <span class="comment">// Return a pointer to slot that points to a cache entry that</span></span><br><span class="line">  <span class="comment">// matches key/hash.  If there is no such cache entry, return a</span></span><br><span class="line">  <span class="comment">// pointer to the trailing slot in the corresponding linked list.</span></span><br><span class="line">  <span class="comment">// 根据key在table中查找对应的节点</span></span><br><span class="line">  <span class="function">LRUHandle** <span class="title">FindPointer</span><span class="params">(<span class="keyword">const</span> Slice&amp; key, uint32_t hash)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 获取该key在list中的bucket位置，ptr是链表的指针</span></span><br><span class="line">    LRUHandle** ptr = &amp;list_[hash &amp; (length_ - <span class="number">1</span>)];</span><br><span class="line">    <span class="comment">// 遍历链表，找到key值和hash值都和查找值相同的节点</span></span><br><span class="line">    <span class="keyword">while</span> (*ptr != <span class="literal">NULL</span> &amp;&amp;</span><br><span class="line">           ((*ptr)-&gt;hash != hash || key != (*ptr)-&gt;key())) &#123;</span><br><span class="line">      ptr = &amp;(*ptr)-&gt;next_hash;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> ptr;</span><br><span class="line">  &#125;</span><br><span class="line"> <span class="comment">// 当table中节点数到达一定大小时就要resize，不然会导致链表太长，查找效率低</span></span><br><span class="line">  <span class="function"><span class="keyword">void</span> <span class="title">Resize</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">uint32_t</span> new_length = <span class="number">4</span>;</span><br><span class="line">    <span class="keyword">while</span> (new_length &lt; elems_) &#123;</span><br><span class="line">      new_length *= <span class="number">2</span>;  <span class="comment">// 新的table长度</span></span><br><span class="line">    &#125;</span><br><span class="line">    LRUHandle** new_list = <span class="keyword">new</span> LRUHandle*[new_length];</span><br><span class="line">    <span class="built_in">memset</span>(new_list, <span class="number">0</span>, <span class="keyword">sizeof</span>(new_list[<span class="number">0</span>]) * new_length);  <span class="comment">// 初始为0</span></span><br><span class="line">    <span class="keyword">uint32_t</span> count = <span class="number">0</span>;</span><br><span class="line">    <span class="comment">// 循环遍历旧table的bucket</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">uint32_t</span> i = <span class="number">0</span>; i &lt; length_; i++) &#123;</span><br><span class="line">      LRUHandle* h = list_[i];</span><br><span class="line">      <span class="comment">// 将bucket中的链表插入到新的table中</span></span><br><span class="line">      <span class="keyword">while</span> (h != <span class="literal">NULL</span>) &#123;</span><br><span class="line">        LRUHandle* next = h-&gt;next_hash;  <span class="comment">// 链表中下一个节点值</span></span><br><span class="line">        <span class="keyword">uint32_t</span> hash = h-&gt;hash;  <span class="comment">// 当前节点hash值</span></span><br><span class="line">        LRUHandle** ptr = &amp;new_list[hash &amp; (new_length - <span class="number">1</span>)]; <span class="comment">// 当前节点在新table中的bucket位置</span></span><br><span class="line">        h-&gt;next_hash = *ptr; <span class="comment">// 把当前节点插入到bucket的头部，也就是链表的头部</span></span><br><span class="line">        *ptr = h;  <span class="comment">// 将表头指针指向该节点</span></span><br><span class="line">        h = next; <span class="comment">// 继续将该链表的下一个节点插入新表</span></span><br><span class="line">        count++;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    assert(elems_ == count);</span><br><span class="line">    <span class="keyword">delete</span>[] list_;</span><br><span class="line">    list_ = new_list;</span><br><span class="line">    length_ = new_length;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>上面是HandleTable的实现过程，下面再来看下LRUCache的实现过程：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">// A single shard of sharded cache.</span><br><span class="line">class LRUCache &#123;</span><br><span class="line"> public:</span><br><span class="line">  LRUCache();</span><br><span class="line">  ~LRUCache();</span><br><span class="line"></span><br><span class="line">  // Separate from constructor so caller can easily make an array of LRUCache</span><br><span class="line">  void SetCapacity(size_t capacity) &#123; capacity_ = capacity; &#125;</span><br><span class="line"></span><br><span class="line">  // Like Cache methods, but with an extra "hash" parameter.  // 插入key-value</span><br><span class="line">  Cache::Handle* Insert(const Slice&amp; key, uint32_t hash,</span><br><span class="line">                        void* value, size_t charge,</span><br><span class="line">                        void (*deleter)(const Slice&amp; key, void* value));</span><br><span class="line">  Cache::Handle* Lookup(const Slice&amp; key, uint32_t hash);  // 在cache中根据key进行查找</span><br><span class="line">  void Release(Cache::Handle* handle); </span><br><span class="line">  void Erase(const Slice&amp; key, uint32_t hash);</span><br><span class="line"></span><br><span class="line"> private:</span><br><span class="line">  void LRU_Remove(LRUHandle* e); // 删除节点</span><br><span class="line">  void LRU_Append(LRUHandle* e); // 新增一个节点</span><br><span class="line">  void Unref(LRUHandle* e);</span><br><span class="line"></span><br><span class="line">  // Initialized before use.</span><br><span class="line">  size_t capacity_;</span><br><span class="line">  // mutex_ protects the following state.</span><br><span class="line">  port::Mutex mutex_;</span><br><span class="line">  size_t usage_;</span><br><span class="line"></span><br><span class="line">  // Dummy head of LRU list.</span><br><span class="line">  // lru.prev is newest entry, lru.next is oldest entry.</span><br><span class="line">  LRUHandle lru_;  // 双向循环链表的头</span><br><span class="line">  HandleTable table_;  // 上面分析过的HandleTable</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">LRUCache::LRUCache()</span><br><span class="line">    : usage_(0) &#123;</span><br><span class="line">  // Make empty circular linked list</span><br><span class="line">  lru_.next = &amp;lru_;</span><br><span class="line">  lru_.prev = &amp;lru_;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">LRUCache::~LRUCache() &#123;</span><br><span class="line">  for (LRUHandle* e = lru_.next; e != &amp;lru_; ) &#123;</span><br><span class="line">    LRUHandle* next = e-&gt;next;</span><br><span class="line">    assert(e-&gt;refs == 1);  // Error if caller has an unreleased handle</span><br><span class="line">    Unref(e);</span><br><span class="line">    e = next;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void LRUCache::Unref(LRUHandle* e) &#123;</span><br><span class="line">  assert(e-&gt;refs &gt; 0);</span><br><span class="line">  e-&gt;refs--;</span><br><span class="line">  if (e-&gt;refs &lt;= 0) &#123;</span><br><span class="line">    usage_ -= e-&gt;charge;</span><br><span class="line">    (*e-&gt;deleter)(e-&gt;key(), e-&gt;value);</span><br><span class="line">    free(e);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void LRUCache::LRU_Remove(LRUHandle* e) &#123;</span><br><span class="line">  // 在双向循环链表中删除一个节点，注意删除后前后指针的指向</span><br><span class="line">  e-&gt;next-&gt;prev = e-&gt;prev;</span><br><span class="line">  e-&gt;prev-&gt;next = e-&gt;next;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void LRUCache::LRU_Append(LRUHandle* e) &#123;</span><br><span class="line">  // Make "e" newest entry by inserting just before lru_</span><br><span class="line">  // 将新节点插入到lru_的prev处</span><br><span class="line">  e-&gt;next = &amp;lru_;</span><br><span class="line">  e-&gt;prev = lru_.prev;</span><br><span class="line">  e-&gt;prev-&gt;next = e;</span><br><span class="line">  e-&gt;next-&gt;prev = e;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">//根据key值进行查找</span><br><span class="line">Cache::Handle* LRUCache::Lookup(const Slice&amp; key, uint32_t hash) &#123;</span><br><span class="line">  MutexLock l(&amp;mutex_);</span><br><span class="line">  // 这里可以看出来为什么要单独搞一个table了，使用table的话查找效率接近于O(1)</span><br><span class="line">  LRUHandle* e = table_.Lookup(key, hash);</span><br><span class="line">  if (e != NULL) &#123;</span><br><span class="line">    // 由于使用LRU算法，查找一次相当于访问了一次，要把该节点移动到链表头部，具体做法是先删除，再插入。这里也可以看出使用双向链表的好处，插入和删除的时间复杂度都是O(1)</span><br><span class="line">    e-&gt;refs++;</span><br><span class="line">    LRU_Remove(e);</span><br><span class="line">    LRU_Append(e);</span><br><span class="line">  &#125;</span><br><span class="line">  return reinterpret_cast&lt;Cache::Handle*&gt;(e);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void LRUCache::Release(Cache::Handle* handle) &#123;</span><br><span class="line">  MutexLock l(&amp;mutex_);</span><br><span class="line">  Unref(reinterpret_cast&lt;LRUHandle*&gt;(handle));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 插入一个节点</span><br><span class="line">Cache::Handle* LRUCache::Insert(</span><br><span class="line">    const Slice&amp; key, uint32_t hash, void* value, size_t charge,</span><br><span class="line">    void (*deleter)(const Slice&amp; key, void* value)) &#123;</span><br><span class="line">  MutexLock l(&amp;mutex_);</span><br><span class="line"></span><br><span class="line">  LRUHandle* e = reinterpret_cast&lt;LRUHandle*&gt;(</span><br><span class="line">      malloc(sizeof(LRUHandle)-1 + key.size()));</span><br><span class="line">  e-&gt;value = value;</span><br><span class="line">  e-&gt;deleter = deleter;</span><br><span class="line">  e-&gt;charge = charge;</span><br><span class="line">  e-&gt;key_length = key.size();</span><br><span class="line">  e-&gt;hash = hash;</span><br><span class="line">  e-&gt;refs = 2;  // One from LRUCache, one for the returned handle</span><br><span class="line">  memcpy(e-&gt;key_data, key.data(), key.size());</span><br><span class="line">   //1. 将节点插入到双向链表中</span><br><span class="line">  LRU_Append(e);</span><br><span class="line">  usage_ += charge;</span><br><span class="line">  //2. 将节点插入到table中</span><br><span class="line">  LRUHandle* old = table_.Insert(e);</span><br><span class="line">  if (old != NULL) &#123;</span><br><span class="line">    // 如果table中插入的位置原来有节点，需要将该节点删除。</span><br><span class="line">    LRU_Remove(old);</span><br><span class="line">    Unref(old); </span><br><span class="line">  &#125;</span><br><span class="line">  // 插入节点之后如果LRUCache的容量超过了限定值，需要将最近最不常用的节点删除掉</span><br><span class="line">  while (usage_ &gt; capacity_ &amp;&amp; lru_.next != &amp;lru_) &#123;</span><br><span class="line">    LRUHandle* old = lru_.next;</span><br><span class="line">    LRU_Remove(old);</span><br><span class="line">    table_.Remove(old-&gt;key(), old-&gt;hash);</span><br><span class="line">    Unref(old);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  return reinterpret_cast&lt;Cache::Handle*&gt;(e);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void LRUCache::Erase(const Slice&amp; key, uint32_t hash) &#123;</span><br><span class="line">  MutexLock l(&amp;mutex_);</span><br><span class="line">  LRUHandle* e = table_.Remove(key, hash);</span><br><span class="line">  if (e != NULL) &#123;</span><br><span class="line">    LRU_Remove(e);</span><br><span class="line">    Unref(e);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看出同时使用双向链表和数组，可以使得查找和删除的时间复杂度为O(1)</p>
+<p>上面是LRUCache的具体实现，Leveldb在实际使用时，是用的ShardedLRUCache。ShardedLRUCache封装了16个LRUCache，由于代码比较简单，这里就不分析了。</p>
+
+    
+  </div>
+  <footer>
+    
+      
+  <div class="categories">
+    <a class="categories-link" href="/categories/技术/">技术</a>
+  </div>
+
+      
+  <div class="tags">
+    <a class="tags-link" href="/tags/leveldb/">leveldb</a>
+  </div>
+
+    
+  </footer>
+</article>
+
+
+</div>
+  </div>
+  <footer id="footer"><div class="footer-mask"></div>
+<div class="copyright">
+  &copy; 2018
+  
+    <a href="/">Dorothy Zhang</a>
+  
+  <div class="heartbeat"></div><div class="heartbeat"></div>
+  <div class="heartbeat float"></div>
+</div>
+<script>
+  // heartbeart forcetouch
+  var heartEl1 = document.querySelector('.heartbeat:first-of-type')
+  var heartEl2 = document.querySelector('.heartbeat:nth-child(3)')
+  var heartFloat = document.querySelector('.heartbeat.float')
+
+  function prepareForForceClick(event) {
+    event.preventDefault();
+  }
+
+  function enterForceClick(event) {
+  }
+
+  function endForceClick(event) {
+    heartFloat.style.transform = 'scale(0)';
+  }
+
+  function forceChanged(event) {
+    heartFloat.style.transform = 'scale(' + 8*event.webkitForce + ')';
+  }
+
+  function setupForceClickBehavior(someElement)
+  {
+    someElement.addEventListener("webkitmouseforcewillbegin", prepareForForceClick, false);
+    someElement.addEventListener("webkitmouseforcedown", enterForceClick, false);
+    someElement.addEventListener("webkitmouseforceup", endForceClick, false);
+    someElement.addEventListener("webkitmouseforcechanged", forceChanged, false);
+  }
+
+  setupForceClickBehavior(heartEl1);
+  setupForceClickBehavior(heartEl2);
+
+  heartFloat.addEventListener('click', function(){
+    heartFloat.style.transform = 'scale(0)'
+  }, false)
+</script>
+</footer>
+  <script src="//cdn.bootcss.com/jquery/2.2.1/jquery.min.js"></script>
+<script src="/js/scale.fix.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+  (function($){
+    $('.fancybox').fancybox();
+  })(jQuery);
+</script>
+
+
+  <div class="footer-mask"></div>
+</body>
+</html>
