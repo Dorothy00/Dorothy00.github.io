@@ -4,21 +4,28 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="chrome=1">
   
-  <title>DOROTHY</title>
+  <title>Leveldb源码学习系列(五) Table Builder分析 | DOROTHY</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   
     <meta name="author" content="Dorothy Zhang">
   
   
-  <meta name="description">
-<meta property="og:type" content="website">
-<meta property="og:title" content="DOROTHY">
-<meta property="og:url" content="http://yoursite.com/index.html">
+    <meta name="description" content="前文我们学习了Data Block、Filter Block的结构以及构建过程，而Data Block、Filter Block、Meta Index Block、Index Block和Footer共同组成了Levedb中的table。本节我们学习table是如何构建的。
+1. Table的结构leveldb的tabel_format文件已经将table的结构介绍的非常清楚了，下面我们来具体看一">
+  
+  <meta name="description" content="前文我们学习了Data Block、Filter Block的结构以及构建过程，而Data Block、Filter Block、Meta Index Block、Index Block和Footer共同组成了Levedb中的table。本节我们学习table是如何构建的。
+1. Table的结构leveldb的tabel_format文件已经将table的结构介绍的非常清楚了，下面我们来具体看一">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Leveldb源码学习系列(五) Table Builder分析">
+<meta property="og:url" content="http://yoursite.com/2018/08/04/Leveldb源码学习系列(五) Table Builder分析/index.html">
 <meta property="og:site_name" content="DOROTHY">
-<meta property="og:description">
+<meta property="og:description" content="前文我们学习了Data Block、Filter Block的结构以及构建过程，而Data Block、Filter Block、Meta Index Block、Index Block和Footer共同组成了Levedb中的table。本节我们学习table是如何构建的。
+1. Table的结构leveldb的tabel_format文件已经将table的结构介绍的非常清楚了，下面我们来具体看一">
+<meta property="og:updated_time" content="2018-08-04T06:56:32.491Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="DOROTHY">
-<meta name="twitter:description">
+<meta name="twitter:title" content="Leveldb源码学习系列(五) Table Builder分析">
+<meta name="twitter:description" content="前文我们学习了Data Block、Filter Block的结构以及构建过程，而Data Block、Filter Block、Meta Index Block、Index Block和Footer共同组成了Levedb中的table。本节我们学习table是如何构建的。
+1. Table的结构leveldb的tabel_format文件已经将table的结构介绍的非常清楚了，下面我们来具体看一">
   
   
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -51,17 +58,11 @@
 </nav>
 
   <div class="wrapper">
-    <div class="content">
-
-
-
-
-  
-    <article class="post">
+    <div class="content"><article class="post">
   <header>
     
   
-    <h1 class="title"><a href="/2018/08/04/Leveldb源码学习系列(五) Table Builder分析/">Leveldb源码学习系列(五) Table Builder分析</a></h1>
+    <h1 class="title">Leveldb源码学习系列(五) Table Builder分析</h1>
   
 
     
@@ -88,403 +89,22 @@
 
     
   </div>
-  <footer class="end-sep">
+  <footer>
     
       
-      
-    
-  </footer>
-</article>
-
-
-
-  
-    <article class="post">
-  <header>
-    
-  
-    <h1 class="title"><a href="/2018/08/02/Leveldb源码学习系列(四) Filter Block分析/">Leveldb源码学习系列(四) Filter Block分析</a></h1>
-  
-
-    
-      <a href="/2018/08/02/Leveldb源码学习系列(四) Filter Block分析/">
-  <time datetime="2018-08-02T14:53:11.000Z">
-    2018-08-02
-  </time>
-</a>
-    
-  </header>
-  
-  <div class="entry">
-    
-      <p>上一篇介绍了Data Block，本节将介绍Filter Block。</p>
-<p>Meta Block中存储的是过滤器，通过Bloom Filter可以快速判断一条记录是否在Data Block中，从而节省大量的查找时间。我们首先介绍一下什么是Bloom Filter。</p>
-<h3 id="1-_Bloom_Filter">1. Bloom Filter</h3><p>Bloom Filter主要用来快速判断一个元素是否在一个集合中，如果判断不在集合中，那么该元素就一定不在集合中；如果判断在集合中，那么该元素也有一定的概率不在集合中。也就是说Bloom Filter有一定的误判率。</p>
-<p>一般判断一个元素是否在集合中，想到的方法有散列表、二叉树等数据结构，通过查找的方式来判断。上述两种方式的时间复杂度分别为O(1)、O(logn)，空间复杂度都为O(n)。而Bloom的空间和时间复杂度都是常数级的，在有较高的查找性能的同时也能节省大量的空间。</p>
-<p>下面再来介绍下Bloom Filter的原理：</p>
-<p>Bloom Filter是一个有m个比特位的字符串，初识时每个比特位都为0。同时定义了k个哈希函数，k个哈希函数的哈希值在[0, m-1]之间，对应于m个比特位。</p>
-<p>添加一个元素时，首先计算该元素的k个哈希值，然后将k个哈希值对应的比特位置为1。查找该元素是否在集合中时，也要计算k个哈希值，然后看对应的比特位是否为1，如果有一个不为1，说明该元素一定不在集合中。</p>
-<p>以上就是Bloom filter的大致原理了。</p>
-    
+  <div class="categories">
+    <a class="categories-link" href="/categories/技术/">技术</a>
   </div>
-  <footer class="end-sep">
-    
+
       
-        <div class="alignleft">
-          <a href="/2018/08/02/Leveldb源码学习系列(四) Filter Block分析/#more" class="more-link">阅读全文</a>
-        </div>
-      
-      
-    
-  </footer>
-</article>
-
-
-
-  
-    <article class="post">
-  <header>
-    
-  
-    <h1 class="title"><a href="/2018/08/01/Leveldb源码学习系列(三) Block分析/">Leveldb源码学习系列(三) Block分析</a></h1>
-  
-
-    
-      <a href="/2018/08/01/Leveldb源码学习系列(三) Block分析/">
-  <time datetime="2018-08-01T15:24:11.000Z">
-    2018-08-01
-  </time>
-</a>
-    
-  </header>
-  
-  <div class="entry">
-    
-      <p>Leveldb的sst主要由data block 、meta block、meta index block、index block以及footer组成。其中data block主要用来存放数据，meta block主要用来存放过滤器， meta index block存放的是meta block的索引，index block存放的是data block的索引， footer中存放了meta index block和index block的索引。本节我们将分析data block的结构以及构建过程。</p>
-<h3 id="1-_data_block的结构">1. data block的结构</h3><ol>
-<li><p>k-v record中存储的是key-value值，记录按照key的顺序进行排序。leveldb为了节省存储空间，每条record的key会使用前缀压缩。具体存储格式如下：</p>
-<p><img src="http://7xoxkx.com1.z0.glb.clouddn.com/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-08-01%20%E4%B8%8B%E5%8D%8810.51.56.png" alt=""></p>
-</li>
-</ol>
-<p>[key中相同部分大小] | [key中不同部分大小] | [value大小] | [key 中不同部分值] | [value值]</p>
-<ol>
-<li><p>使用前缀压缩的缺点是要查找一个key，必须将其之前所有的key全部读取出来，这样显然效率太低。为了解决该问题，leveldb使用restart point方式，每隔16(可配置)个key做一次前缀压缩，这样每次读取key时，最多只要读取16</p>
-    
+  <div class="tags">
+    <a class="tags-link" href="/tags/leveldb/">leveldb</a>
   </div>
-  <footer class="end-sep">
-    
-      
-        <div class="alignleft">
-          <a href="/2018/08/01/Leveldb源码学习系列(三) Block分析/#more" class="more-link">阅读全文</a>
-        </div>
-      
-      
+
     
   </footer>
 </article>
 
-
-
-  
-    <article class="post">
-  <header>
-    
-  
-    <h1 class="title"><a href="/2018/07/31/Leveldb源码学习系列(二) Log分析/">Leveldb源码学习系列(二) Log分析</a></h1>
-  
-
-    
-      <a href="/2018/07/31/Leveldb源码学习系列(二) Log分析/">
-  <time datetime="2018-07-31T15:49:11.000Z">
-    2018-07-31
-  </time>
-</a>
-    
-  </header>
-  
-  <div class="entry">
-    
-      <p>Leveldb在将数据写入memtable之前会首先进行WAL操作，即记录日志。这样即使内存中的数据丢失，也可以即使恢复过来。本节将分析Log的写入和读取过程。</p>
-<h3 id="1-_Log文件的格式">1. Log文件的格式</h3><p>Leveldb的log文件以block为单位进行划分，每个block的大小默认为32KB，每个block中存储了多个record，一个record就是一条记录操作。record的格式为：</p>
-<p>checksum(4B) | length(2B) | type(1B) | data</p>
-<p>其中type有5种类型，分别为：</p>
-<ul>
-<li>kZeroType </li>
-<li>kFullType </li>
-<li>kFirstType</li>
-<li>kMiddleType</li>
-<li>kLastType</li>
-</ul>
-<p>如果一条记录的大小小于32KB，那么就可以存放在一个block中，该条记录类型就是kFullType；如果记录在一个block中放不下，那么就要拆分成多个record进行存放，其中第一个record的type是kFirstType，中间的是kMiddleType，最后一个record的类型是kLastType。<br>
-    
-  </div>
-  <footer class="end-sep">
-    
-      
-        <div class="alignleft">
-          <a href="/2018/07/31/Leveldb源码学习系列(二) Log分析/#more" class="more-link">阅读全文</a>
-        </div>
-      
-      
-    
-  </footer>
-</article>
-
-
-
-  
-    <article class="post">
-  <header>
-    
-  
-    <h1 class="title"><a href="/2018/07/30/Leveldb源码学习系列(一) Memtable分析/">Leveldb源码学习系列(一) Memtable分析</a></h1>
-  
-
-    
-      <a href="/2018/07/30/Leveldb源码学习系列(一) Memtable分析/">
-  <time datetime="2018-07-30T15:51:11.000Z">
-    2018-07-30
-  </time>
-</a>
-    
-  </header>
-  
-  <div class="entry">
-    
-      <p>Leveldb在插入一条记录时首先会将插入操作计入日志文件，然后写入内存中的Memtable中，将写操作写入内存可以降低随机写消耗的时间，但同时读的复杂度会相应的增大。本节主要学习Memtable的数据结构，以及存储细节。</p>
-<h3 id="1-_Memtable中的各种Key">1. Memtable中的各种Key</h3><p>如图所示，Memtable中主要有如下四种Key，分别为user_key, Internal_key, Lookup_key以及Memtable_key。user_key是用户传入的key，Internal_key是指加入SequenceNum和ValueType的Key，ValueType有两种，一种是正常的插入值，一种是删除值，表示此次该key需要被删除。Mem_entry表示实际插入到Memtable中的值。</p>
-<p><img src="http://7xoxkx.com1.z0.glb.clouddn.com/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-07-30%20%E4%B8%8B%E5%8D%8811.51.49.png" alt=""></p>
-    
-  </div>
-  <footer class="end-sep">
-    
-      
-        <div class="alignleft">
-          <a href="/2018/07/30/Leveldb源码学习系列(一) Memtable分析/#more" class="more-link">阅读全文</a>
-        </div>
-      
-      
-    
-  </footer>
-</article>
-
-
-
-  
-    <article class="post">
-  <header>
-    
-  
-    <h1 class="title"><a href="/2018/07/07/SkipList学习/">SkipList学习</a></h1>
-  
-
-    
-      <a href="/2018/07/07/SkipList学习/">
-  <time datetime="2018-07-07T07:49:11.000Z">
-    2018-07-07
-  </time>
-</a>
-    
-  </header>
-  
-  <div class="entry">
-    
-      <p>最近打算学习一下LevelDB的源码，由于涉及到SkipList，而SkipList又是数据存储中常用的数据结构，遂好好学习一下。</p>
-<h4 id="1-_SkipList是什么">1. SkipList是什么</h4><p>SkipList是一种用来替代平衡树的数据结构，常见的平衡树有红黑树、b树、AVL树等。但是平衡树维护树的平衡算法过于复杂，使用SkipList简化了插入和删除操作，同时也能取得O(logn)的时间复杂度。那么SkipList是如何做到的呢？我们看下图：</p>
-<p><img src="http://7xoxkx.com1.z0.glb.clouddn.com/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-07-07%20%E4%B8%8B%E5%8D%883.50.33.png" alt=""></p>
-<p>图中的a是一个有序的链表，他的查找时间复杂度是O(n)，如果我们每隔一个节点多增加一个指针，指向该节点间距为2的节点（图中b），那么此时查找的时间复杂度是O(n/2)。以此类推，通过不断增加指针，最终查找的时间复杂度会将为O(logn)。</p>
-<p>SkipList中的节点指针并不是严格按照上述规律分配的，每个节点的层数是随机分配的，William Pugh 在SkipList的论文中给出了证明方法。这里不具体说明了（没看懂==）。</p>
-    
-  </div>
-  <footer class="end-sep">
-    
-      
-        <div class="alignleft">
-          <a href="/2018/07/07/SkipList学习/#more" class="more-link">阅读全文</a>
-        </div>
-      
-      
-    
-  </footer>
-</article>
-
-
-
-  
-    <article class="post">
-  <header>
-    
-  
-    <h1 class="title"><a href="/2018/06/12/Time, Clocks, and the Ordering of Events in  Distribute System/">分布式原理学习（四）： Time, Clocks, and the Ordering of Events in  Distribute System</a></h1>
-  
-
-    
-      <a href="/2018/06/12/Time, Clocks, and the Ordering of Events in  Distribute System/">
-  <time datetime="2018-06-12T02:40:01.000Z">
-    2018-06-12
-  </time>
-</a>
-    
-  </header>
-  
-  <div class="entry">
-    
-      <h2 id="Partial_Ordering">Partial Ordering</h2><p>假设一个系统由多个进程组成，每个进程包含一系列事件。接收或发送消息也是进程中的一个事件。我们用⟶表示‘happend before’关系，定义如下：</p>
-<p>Definition: 关系⟶需要满足以下三个条件：</p>
-<p>（1）如果事件a和b是在同一进程中，并且a先于b发生，那么a⟶b。</p>
-<p>（2）一个进程发送消息的事件为a，另一个接收同一消息的事件为b，那么a⟶b。</p>
-<p>（3）如果a⟶b，b⟶c，那么a⟶c。</p>
-<p>如果a ↛ b ∧ b ↛ a，那么a和b是并发的。</p>
-<p>对于任意事件，a ↛ a。这是因为一个事件不能先于它自身发生。</p>
-<p>“时空图”可以描述上述定义：</p>
-<p><img src="http://7xoxkx.com1.z0.glb.clouddn.com/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-06-12%20%E4%B8%8A%E5%8D%8810.51.11.png" alt=""></p>
-<p>图中横向代表空间，纵向表示时间，越往后的时间纵向坐标越高。图中的点表示事件，竖线表示进程。从图可以看出a⟶b表示事件a可以沿着竖线或者消息线到达b。</p>
-<p>也可以将a⟶b理解为事件a会影响事件b。只有当两个事件互不影响时，才可以称他们为并发的。例如图中的p<sub>3</sub>和q<sub>3</sub>是并发的，尽管图中p~3~的物理时间先于q<sub>3</sub>发生，在收到消息p<sub>4</sub>之前，进程P是不知道进程Q在q<sub>3</sub>做了什么的。</p>
-    
-  </div>
-  <footer class="end-sep">
-    
-      
-        <div class="alignleft">
-          <a href="/2018/06/12/Time, Clocks, and the Ordering of Events in  Distribute System/#more" class="more-link">阅读全文</a>
-        </div>
-      
-      
-    
-  </footer>
-</article>
-
-
-
-  
-    <article class="post">
-  <header>
-    
-  
-    <h1 class="title"><a href="/2018/06/06/分布式原理学习(三) BigTable 论文阅读/">分布式原理学习(三)： BigTable 论文阅读</a></h1>
-  
-
-    
-      <a href="/2018/06/06/分布式原理学习(三) BigTable 论文阅读/">
-  <time datetime="2018-06-06T05:20:01.000Z">
-    2018-06-06
-  </time>
-</a>
-    
-  </header>
-  
-  <div class="entry">
-    
-      <h2 id="数据模型">数据模型</h2><p><code>BigTable</code>是一个稀疏的、分布式的、持久化存储的多维度有序<code>map</code>。<code>map</code>的索引由行、列和时间戳组成。下图是<code>BigTable</code>的一个存储例子：</p>
-<p><img src="http://7xoxkx.com1.z0.glb.clouddn.com/bigtable1.png" alt=""></p>
-<p><code>BigTable</code>中的row key是任意的字符串(最大可以到64kb)，对每一行的读或写都是原子的，其中的数据是以row key的字典顺序进行排序的。<code>BigTable</code>根据行的范围将一个大的table分解成几个小的<code>tablet</code>，<code>tablet</code>是数据分布和负载均衡调度的基本单位。客户端可以通过选择合适的row key，是的拥有相似row key的数据存放在一起，这样可以充分利用位置相关性，加快访问速度。</p>
-<p><code>column key</code>是以<code>column family</code>的方式进行组织的，一个<code>column family</code>会有多个<code>column key</code>，存储在<code>column family</code>中的数据往往是相同类型的。一个表中<code>column family</code>的数量是比较小的(最多几百个)，但是<code>column key</code>的数量是不受限制的。<code>column key</code>的命名方式为：<code>family:qualifier</code>。无论是磁盘还是内存的访问控制权限都是在<code>column family</code>级别进行控制的。</p>
-<p>每一个<code>cell</code>中存储的内容都有多个版本，每个版本有一个时间戳，通常是64位的数字，<code>cell</code>中的内容是以时间戳降序排列的，这样用户可以看到最新的版本。<code>BigTable</code>会对<code>cell</code>中无用的版本进行回收，客户端可以配置版本保留数。<br>
-    
-  </div>
-  <footer class="end-sep">
-    
-      
-        <div class="alignleft">
-          <a href="/2018/06/06/分布式原理学习(三) BigTable 论文阅读/#more" class="more-link">阅读全文</a>
-        </div>
-      
-      
-    
-  </footer>
-</article>
-
-
-
-  
-    <article class="post">
-  <header>
-    
-  
-    <h1 class="title"><a href="/2018/05/28/ The Google File System 总结/">分布式原理学习（二）： The Google File System 总结</a></h1>
-  
-
-    
-      <a href="/2018/05/28/ The Google File System 总结/">
-  <time datetime="2018-05-28T09:46:01.000Z">
-    2018-05-28
-  </time>
-</a>
-    
-  </header>
-  
-  <div class="entry">
-    
-      <h2 id="设计需求与假设">设计需求与假设</h2><p>随着Google日益增长的数据处理需求，传统的分布式文件系统在性能、可扩展性、可靠性和可获得性上已经不能满足应用需求，于是Google自己设计和实现了GFS。现有的分布式文件系统主要有以下几点需求与假设：</p>
-<ol>
-<li>节点失效是正常状态。文件系统中包含成百上千的服务器，每个服务器都可能因为应用bug、操作系统bug、人为因素产生的错误、磁盘、内存、连接和网络等原因发生故障。</li>
-<li>系统中有很多的大文件。通常大小是100MB或者更大。几个GB大小的文件是正常的，系统应该有效的对其进行处理。对于小文件，我们不需要进行优化。I/O操作和块大小需要重新设计。</li>
-<li>文件修改以追加操作为主而不是覆盖操作。文件追加操作是系统需要优化的关键点，同时还要保证该操作的原子性。</li>
-<li>读操作分为两种，<code>large stream reads</code>和<code>small random reads</code>。</li>
-<li>对于多个客户端并发的向同一文件追加数据，系统需要保证语义明确。</li>
-<li>高度稳定的带宽比低延迟更加重要。</li>
-</ol>
-    
-  </div>
-  <footer class="end-sep">
-    
-      
-        <div class="alignleft">
-          <a href="/2018/05/28/ The Google File System 总结/#more" class="more-link">阅读全文</a>
-        </div>
-      
-      
-    
-  </footer>
-</article>
-
-
-
-  
-    <article class="post">
-  <header>
-    
-  
-    <h1 class="title"><a href="/2018/05/18/MIT-6.824课程总结/">MIT-6.824课程总结</a></h1>
-  
-
-    
-      <a href="/2018/05/18/MIT-6.824课程总结/">
-  <time datetime="2018-05-18T06:30:01.000Z">
-    2018-05-18
-  </time>
-</a>
-    
-  </header>
-  
-  <div class="entry">
-    
-      <p>  断断续续在写大论文的6个月里终于完成了MIT-6.824的实验部分了(Lab1, Lab2, Lab3, Lab4A)。实验主要是围绕Raft的实现与应用展开。Lab1是实现一个简单的<code>MapReduce</code>系统，应该是4个实验里最简单的一个。Lab2需要实现<code>Raft</code>协议，个人认为是实验里难的一个，完成这个实验后对<code>Raft</code>论文有了一个更直观的认识，知道了它的原理是什么了。然后Lab3和Lab4都是基于<code>Raft</code>协议的应用，通过这两个实验可以知道如何使用<code>Raft</code>以及<code>Raft</code>协议可以用来做什么。虽然自己在做实验的过程比较漫长(穿插了毕业论文，中间有一个bug修了一周才找到原因)，但完成后还是成就感满满，对于<code>Raft</code>协议也有了更深的认识。</p>
-<p>实现过程中也读了课程中的几篇论文，除了<code>Raft</code>和<code>MapReduce</code>有直观的印象外，其他都是云里雾里，不太懂。我想可能是因为我对分布式中用到的技术、原理目前了解都还不太深，后面还有很多东西需要学习。</p>
-<p>实验代码链接：</p>
-<p><a href="https://github.com/ZiyueHuang/Distributed-Systems" target="_blank" rel="external">https://github.com/ZiyueHuang/Distributed-Systems</a></p>
-
-    
-  </div>
-  <footer class="end-sep">
-    
-      
-      
-    
-  </footer>
-</article>
-
-
-
-  
-
-  <nav id="pagination">
-  
-  
-    <a href="/page/2/" class="next">下一页</a>
-  
-  <div class="clearfix"></div>
-</nav>
 
 </div>
   </div>
